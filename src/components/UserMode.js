@@ -74,6 +74,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   // Функція для визначення кольору точки
   const getDotColor = (value) => {
+    if (value === null || value === undefined) return '#9CA3AF'; // сірий для відсутніх значень
     if (value >= 18) return '#3b82f6'; // синій
     if (value > 6 && value < 18) return '#eab308'; // жовтий
     return '#ef4444'; // червоний
@@ -92,6 +93,24 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         r={4}
         fill={getDotColor(value)}
         stroke="#fff"
+        strokeWidth={2}
+      />
+    );
+  };
+
+  // Кастомний компонент для активної точки (при наведенні)
+  const CustomizedActiveDot = (props) => {
+    const { cx, cy, value } = props;
+
+    if (value === null || value === undefined) return null;
+
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={6}
+        fill={getDotColor(value)}
+        stroke="#1f2937"
         strokeWidth={2}
       />
     );
@@ -179,6 +198,18 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           {payload.map((entry, i) => (
             <div key={i}>
               <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+              {entry.value !== null && (
+                <span style={{ 
+                  marginLeft: '8px', 
+                  padding: '2px 6px', 
+                  borderRadius: '4px', 
+                  fontSize: '0.8rem',
+                  backgroundColor: getDotColor(entry.value),
+                  color: entry.value > 6 && entry.value < 18 ? '#000' : '#fff'
+                }}>
+                  {entry.value >= 18 ? '≥18' : entry.value > 6 ? '6-18' : '≤6'}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -190,7 +221,12 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         return (
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <XAxis 
+              dataKey="timestamp" 
+              tickFormatter={formatDateForDisplay} 
+              stroke="#9CA3AF"
+              interval="preserveStartEnd"
+            />
             <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -204,6 +240,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 fillOpacity={0.3}
                 strokeWidth={3}
                 dot={<CustomizedDot />}
+                activeDot={<CustomizedActiveDot />}
+                connectNulls={false}
               />
             ))}
           </AreaChart>
@@ -213,12 +251,22 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         return (
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <XAxis 
+              dataKey="timestamp" 
+              tickFormatter={formatDateForDisplay} 
+              stroke="#9CA3AF"
+              interval="preserveStartEnd"
+            />
             <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map(sensor => (
-              <Bar key={sensor.column} dataKey={sensor.column} fill={sensor.color} name={sensor.name} />
+              <Bar 
+                key={sensor.column} 
+                dataKey={sensor.column} 
+                fill={sensor.color} 
+                name={sensor.name} 
+              />
             ))}
           </BarChart>
         );
@@ -227,7 +275,12 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         return (
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <XAxis 
+              dataKey="timestamp" 
+              tickFormatter={formatDateForDisplay} 
+              stroke="#9CA3AF"
+              interval="preserveStartEnd"
+            />
             <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -239,7 +292,10 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 stroke={sensor.color}
                 strokeWidth={3}
                 dot={<CustomizedDot />}
+                activeDot={<CustomizedActiveDot />}
+                connectNulls={false}
                 name={sensor.name}
+                isAnimationActive={false} // Вимкнути анімацію для кращої продуктивності
               />
             ))}
             <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
@@ -282,6 +338,22 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <option value="7d">7 днів</option>
             <option value="all">Весь час</option>
           </select>
+        </div>
+
+        {/* Легенда кольорів */}
+        <div className="color-legend">
+          <div className="legend-item">
+            <div className="legend-color" style={{backgroundColor: '#ef4444'}}></div>
+            <span>≤ 6</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{backgroundColor: '#eab308'}}></div>
+            <span>6 - 18</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{backgroundColor: '#3b82f6'}}></div>
+            <span>≥ 18</span>
+          </div>
         </div>
       </div>
 
