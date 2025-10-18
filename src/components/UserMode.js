@@ -72,6 +72,31 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   };
 
+  // Функція для визначення кольору точки
+  const getDotColor = (value) => {
+    if (value >= 18) return '#3b82f6'; // синій
+    if (value > 6 && value < 18) return '#eab308'; // жовтий
+    return '#ef4444'; // червоний
+  };
+
+  // Кастомний компонент для точок
+  const CustomizedDot = (props) => {
+    const { cx, cy, value } = props;
+
+    if (value === null || value === undefined) return null;
+
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill={getDotColor(value)}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+    );
+  };
+
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
@@ -126,39 +151,40 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
-const CustomTooltip = ({ active, payload, label, coordinate }) => {
-  if (!active || !payload || !payload.length) return null;
+    const CustomTooltip = ({ active, payload, label, coordinate }) => {
+      if (!active || !payload || !payload.length) return null;
 
-  const tooltipStyle = {
-    position: 'absolute',
-    left: coordinate?.x,
-    top: coordinate?.y - 60, // Позиція над курсором/точкою
-    transform: 'translateX(-50%)',
-    background: '#ffffff', // Білий фон
-    color: '#1e293b',       // Темний текст
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    fontSize: '0.9rem',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-    pointerEvents: 'none',
-    whiteSpace: 'nowrap',
-    zIndex: 999
-  };
+      const tooltipStyle = {
+        position: 'absolute',
+        left: coordinate?.x,
+        top: coordinate?.y - 60,
+        transform: 'translateX(-50%)',
+        background: '#ffffff',
+        color: '#1e293b',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        fontSize: '0.9rem',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+        zIndex: 999
+      };
 
-  return (
-    <div className="custom-tooltip" style={tooltipStyle}>
-      <div style={{ fontWeight: '600', marginBottom: '6px' }}>
-        {formatTooltipDate(label)}
-      </div>
-      {payload.map((entry, i) => (
-        <div key={i}>
-          <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+      return (
+        <div className="custom-tooltip" style={tooltipStyle}>
+          <div style={{ fontWeight: '600', marginBottom: '6px' }}>
+            {formatTooltipDate(label)}
+          </div>
+          {payload.map((entry, i) => (
+            <div key={i}>
+              <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
-};
+      );
+    };
+
     switch (chartType) {
       case 'area':
         return (
@@ -177,10 +203,9 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
                 fill={sensor.color}
                 fillOpacity={0.3}
                 strokeWidth={3}
-                dot={false}
+                dot={<CustomizedDot />}
               />
             ))}
-            
           </AreaChart>
         );
 
@@ -190,7 +215,6 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" width={30} />
-
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map(sensor => (
@@ -205,7 +229,6 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" width={30} />
-
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map(sensor => (
@@ -215,11 +238,10 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
                 dataKey={sensor.column}
                 stroke={sensor.color}
                 strokeWidth={3}
-                dot={false}
+                dot={<CustomizedDot />}
                 name={sensor.name}
               />
             ))}
-            
             <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
           </LineChart>
         );
@@ -278,4 +300,3 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
 };
 
 export default UserMode;
-
