@@ -634,3 +634,56 @@
     width: 100%;
   }
 }
+.custom-tooltip {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-date {
+  font-weight: bold;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.custom-tooltip p {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+/* Додаткові стилі для кращого відображення */
+.user-view {
+  padding: 20px;
+}
+
+.chart-controls-user {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.sensors-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.sensor-toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.sensor-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}

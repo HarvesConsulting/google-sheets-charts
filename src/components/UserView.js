@@ -17,23 +17,107 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
     setVisibleSensors(initialVisibility);
   }, [sensors]);
 
+  // Функція для конвертації дати з рядка в об'єкт Date
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date();
+    
+    // Спроба розпарсити формат "dd.mm.yyyy hh:mm:ss"
+    const parts = dateString.toString().split(' ');
+    if (parts.length >= 2) {
+      const dateParts = parts[0].split('.');
+      const timeParts = parts[1].split(':');
+      
+      if (dateParts.length === 3 && timeParts.length >= 2) {
+        const day = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10) - 1; // Місяці з 0 до 11
+        const year = parseInt(dateParts[2], 10);
+        const hours = parseInt(timeParts[0], 10);
+        const minutes = parseInt(timeParts[1], 10);
+        const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+        
+        return new Date(year, month, day, hours, minutes, seconds);
+      }
+    }
+    
+    // Спроба стандартного парсингу
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  };
+
+  // Функція для форматування дати для відображення
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    
+    const dateObj = typeof date === 'string' ? parseDate(date) : date;
+    
+    // Формат: "dd.mm hh:mm"
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const hours = dateObj.getHours().toString().padStart(2, '0');
+    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}.${month} ${hours}:${minutes}`;
+  };
+
   // Підготовка даних для графіків
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
     
-    const dates = [...new Set(data.map(row => row[config.dateColumn]))].sort();
-    
-    return dates.map(date => {
-      const dataPoint = { date };
+    // Створюємо масив даних з правильними датами
+    const preparedData = data.map(row => {
+      const dataPoint = {
+        originalDate: row[config.dateColumn],
+        timestamp: parseDate(row[config.dateColumn]).getTime(),
+        displayDate: formatDateForDisplay(row[config.dateColumn])
+      };
+      
       sensors.forEach(sensor => {
         if (sensor.column && visibleSensors[sensor.name] !== false) {
-          const row = data.find(row => row[config.dateColumn] === date);
-          dataPoint[sensor.name] = row ? parseFloat(row[sensor.column]) || 0 : null;
+          dataPoint[sensor.name] = row[sensor.column] ? parseFloat(row[sensor.column]) || 0 : null;
         }
       });
+      
       return dataPoint;
     });
+    
+    // Сортуємо за датою
+    return preparedData.sort((a, b) => a.timestamp - b.timestamp);
   }, [data, config.dateColumn, sensors, visibleSensors]);
+
+  // Кастомний компонент для підписів на осі X
+  const CustomXAxisTick = ({ x, y, payload }) => {
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text 
+          x={0} 
+          y={0} 
+          dy={16} 
+          textAnchor="middle" 
+          fill="#666" 
+          fontSize={12}
+        >
+          {formatDateForDisplay(payload.value)}
+        </text>
+      </g>
+    );
+  };
+
+  // Кастомний тултіп
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip">
+          <p className="tooltip-date">{`Дата: ${formatDateForDisplay(label)}`}</p>
+          {payload.map((entry, index) => (
+            <p key={`item-${index}`} style={{ color: entry.color }}>
+              {`${entry.name}: ${entry.value}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   const toggleSensorVisibility = (sensorName) => {
     setVisibleSensors(prev => ({
@@ -58,7 +142,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
 
     const commonProps = {
       data: chartData,
-      margin: { top: 20, right: 30, left: 20, bottom: 5 }
+      margin: { top: 20, right: 30, left: 20, bottom: 40 } // Збільшили bottom для місця під підписи
     };
 
     const activeSensors = sensors.filter(sensor => visibleSensors[sensor.name] !== false);
@@ -68,9 +152,14 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
         return (
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis 
+              dataKey="originalDate" 
+              tick={<CustomXAxisTick />}
+              interval="preserveStartEnd"
+              minTickGap={50}
+            />
             <YAxis />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map((sensor) => (
               <Line 
@@ -90,9 +179,14 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
         return (
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis 
+              dataKey="originalDate" 
+              tick={<CustomXAxisTick />}
+              interval="preserveStartEnd"
+              minTickGap={50}
+            />
             <YAxis />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map((sensor) => (
               <Area 
@@ -112,9 +206,14 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
         return (
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis 
+              dataKey="originalDate" 
+              tick={<CustomXAxisTick />}
+              interval="preserveStartEnd"
+              minTickGap={50}
+            />
             <YAxis />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map((sensor) => (
               <Bar 
