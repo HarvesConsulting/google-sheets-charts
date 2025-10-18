@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
-import ChartContainer from './components/ChartContainer';
 import DeveloperPanel from './components/DeveloperPanel';
 import UserView from './components/UserView';
 import './App.css';
