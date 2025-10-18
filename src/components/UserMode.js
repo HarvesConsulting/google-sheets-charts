@@ -264,50 +264,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      <div className="statistics-panel">
-        <h3>📈 Статистика даних</h3>
-        <div className="stats-grid">
-          {activeSensors.map(sensor => {
-            const sensorData = chartData
-              .map(point => point[sensor.column])
-              .filter(val => val !== null);
-
-            if (sensorData.length === 0) return null;
-
-            const current = sensorData[sensorData.length - 1];
-            const min = Math.min(...sensorData);
-            const max = Math.max(...sensorData);
-            const avg = sensorData.reduce((a, b) => a + b, 0) / sensorData.length;
-
-            return (
-              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: sensor.color || '#1e3a8a' }}>
-                <div className="stat-header">
-                  <h4>{sensor.name}</h4>
-                  <div className="data-points">{sensorData.length} точок</div>
-                </div>
-                <div className="stat-values">
-                  <div className="stat-item">
-                    <span className="stat-label">Поточне:</span>
-                    <span className="stat-value current">{current.toFixed(2)}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Мінімум:</span>
-                    <span className="stat-value min">{min.toFixed(2)}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Максимум:</span>
-                    <span className="stat-value max">{max.toFixed(2)}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Середнє:</span>
-                    <span className="stat-value avg">{avg.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      
 
       <div className="actions-panel">
         <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
