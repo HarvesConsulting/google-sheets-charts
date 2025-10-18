@@ -56,24 +56,32 @@ const parseGoogleSheetsData = (data) => {
   return result;
 };
 
-// Нова функція для фільтрації та очищення даних
-export const cleanChartData = (data, xAxis, yAxis) => {
+// Функція для отримання списку доступних колонок
+export const getAvailableColumns = (data) => {
+  if (!data || data.length === 0) return [];
+  
+  const columns = Object.keys(data[0]);
+  // Виключаємо колонку з датою (зазвичай перша)
+  const dataColumns = columns.filter(col => col !== 'ДатаЧас' && col !== 'Date' && col !== 'Timestamp');
+  
+  return dataColumns;
+};
+
+// Функція для фільтрації та очищення даних для конкретного датчика
+export const cleanSensorData = (data, dateColumn, sensorColumn) => {
   if (!data || !Array.isArray(data)) return [];
   
   return data
     .filter(row => {
-      // Фільтруємо рядки де є дані для обох осей
-      const hasXData = row[xAxis] !== undefined && row[xAxis] !== '' && row[xAxis] !== null;
-      const hasYData = row[yAxis] !== undefined && row[yAxis] !== '' && row[yAxis] !== null;
+      const hasDate = row[dateColumn] !== undefined && row[dateColumn] !== '' && row[dateColumn] !== null;
+      const hasSensorData = row[sensorColumn] !== undefined && row[sensorColumn] !== '' && row[sensorColumn] !== null;
+      const isSensorNumber = !isNaN(parseFloat(row[sensorColumn]));
       
-      // Додатково перевіряємо що Y - число
-      const isYNumber = !isNaN(parseFloat(row[yAxis]));
-      
-      return hasXData && hasYData && isYNumber;
+      return hasDate && hasSensorData && isSensorNumber;
     })
     .map(row => ({
-      ...row,
-      // Конвертуємо Y в число на всяк випадок
-      [yAxis]: parseFloat(row[yAxis])
+      date: row[dateColumn],
+      value: parseFloat(row[sensorColumn]),
+      sensor: sensorColumn
     }));
 };

@@ -235,3 +235,218 @@
     flex-direction: column;
   }
 }
+/* Стилі для панелі розробника */
+.developer-panel {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.config-section, .sensors-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.sensor-config {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  border-left: 4px solid #007bff;
+}
+
+.sensor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.sensor-header h4 {
+  margin: 0;
+  color: #333;
+}
+
+.sensor-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.btn-danger {
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+/* Стилі для сторінки користувача */
+.user-view {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.last-update-user {
+  background: #e7f3ff;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #007bff;
+}
+
+.chart-controls-user {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.chart-type-selector, .sensors-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sensors-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.sensor-toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 2px solid #e1e5e9;
+}
+
+.sensor-toggle-item input[type="checkbox"]:checked {
+  background: #007bff;
+}
+
+.sensor-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chart-wrapper-user {
+  margin: 30px 0;
+}
+
+/* Статистика */
+.sensors-stats {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.stat-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.stat-item h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+/* Попередній перегляд даних */
+.data-preview {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.preview-info {
+  background: #e7f3ff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.preview-table {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.preview-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.preview-table th,
+.preview-table td {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.preview-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.preview-more {
+  text-align: center;
+  padding: 10px;
+  background: #f8f9fa;
+  color: #666;
+  font-style: italic;
+}
+
+/* Перемикач режимів */
+.mode-switcher {
+  margin-top: 15px;
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+  .sensor-fields {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-controls-user {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .sensors-toggle {
+    flex-direction: column;
+  }
+}

@@ -1,24 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
 import ChartContainer from './components/ChartContainer';
-import SheetConfig from './components/SheetConfig';
+import DeveloperPanel from './components/DeveloperPanel';
+import UserView from './components/UserView';
 import './App.css';
 
 function App() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState(300000);
+  const [isDeveloperMode, setIsDeveloperMode] = useState(true);
+  const [sensors, setSensors] = useState([
+    { name: 'Шпалера', column: 'Шпалера', color: '#0088FE', visible: true }
+  ]);
   
-  // Конфігурація за замовчуванням
   const [config, setConfig] = useState({
     sheetId: '',
-    sheetName: 'Sheet1',
+    sheetName: 'AppSheetView',
     range: 'A:Z',
-    xAxis: 'Favorite',
-    yAxis: 'Count'
+    dateColumn: 'ДатаЧас'
   });
 
-  // Використовуємо useCallback щоб уникнути зайвих ререндерів
   const fetchData = useCallback(async () => {
     if (!config.sheetId) {
       setError('⚠️ Будь ласка, введіть ID таблиці');
@@ -31,6 +36,7 @@ function App() {
     try {
       const data = await getSheetData(config.sheetId, config.sheetName, config.range);
       setChartData(data);
+      setLastUpdate(new Date());
       console.log('Дані успішно завантажено:', data);
     } catch (err) {
       setError('❌ Помилка завантаження даних. Перевірте ID таблиці та налаштування.');
@@ -44,26 +50,123 @@ function App() {
     if (config.sheetId) {
       fetchData();
     }
-  }, [config.sheetId, fetchData]); // Тепер fetchData в залежностях
+  }, [config.sheetId, fetchData]);
+
+  useEffect(() => {
+    let intervalId;
+
+    if (autoRefresh && config.sheetId) {
+      intervalId = setInterval(() => {
+        console.log('Автоматичне оновлення даних...');
+        fetchData();
+      }, refreshInterval);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [autoRefresh, refreshInterval, config.sheetId, fetchData]);
 
   const handleConfigUpdate = (newConfig) => {
     setConfig(newConfig);
   };
 
+  const handleSensorsUpdate = (newSensors) => {
+    setSensors(newSensors);
+  };
+
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(!autoRefresh);
+  };
+
+  const handleIntervalChange = (minutes) => {
+    setRefreshInterval(minutes * 60000);
+  };
+
+  const toggleDeveloperMode = () => {
+    setIsDeveloperMode(!isDeveloperMode);
+  };
+
+  const formatLastUpdate = () => {
+    if (!lastUpdate) return '---';
+    return lastUpdate.toLocaleTimeString('uk-UA');
+  };
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>📊 Графіки з Google Sheets</h1>
-        <p>Відображення даних з Google Tables у вигляді графіків</p>
+        <h1>📊 Система моніторингу датчиків</h1>
+        <p>Динамічні графіки з Google Sheets</p>
+        
+        <div className="mode-switcher">
+          <button 
+            className={`btn ${isDeveloperMode ? 'btn-active' : 'btn-inactive'}`}
+            onClick={toggleDeveloperMode}
+          >
+            {isDeveloperMode ? '👨‍💻 Режим розробника' : '👤 Режим користувача'}
+          </button>
+        </div>
       </header>
       
       <div className="container">
-        <SheetConfig 
-          config={config} 
-          onConfigUpdate={handleConfigUpdate}
-          onRefresh={fetchData}
-        />
+        {isDeveloperMode ? (
+          // Режим розробника
+          <>
+            <DeveloperPanel 
+              config={config}
+              onConfigUpdate={handleConfigUpdate}
+              data={chartData}
+              onRefresh={fetchData}
+              sensors={sensors}
+              onSensorsUpdate={handleSensorsUpdate}
+            />
+            
+            <div className="auto-refresh-panel">
+              <h3>🔄 Автооновлення</h3>
+              <div className="refresh-controls">
+                <button 
+                  className={`btn ${autoRefresh ? 'btn-active' : 'btn-inactive'}`}
+                  onClick={toggleAutoRefresh}
+                >
+                  {autoRefresh ? '⏸️ Призупинити' : '▶️ Увімкнути'} автооновлення
+                </button>
+                
+                <div className="interval-controls">
+                  <label>Інтервал:</label>
+                  <select 
+                    value={refreshInterval / 60000} 
+                    onChange={(e) => handleIntervalChange(Number(e.target.value))}
+                    disabled={!autoRefresh}
+                  >
+                    <option value={1}>1 хвилина</option>
+                    <option value={2}>2 хвилини</option>
+                    <option value={5}>5 хвилин</option>
+                    <option value={10}>10 хвилин</option>
+                    <option value={15}>15 хвилин</option>
+                  </select>
+                </div>
+                
+                <div className="last-update">
+                  ⏰ Останнє оновлення: {formatLastUpdate()}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Режим користувача
+          <UserView 
+            data={chartData}
+            config={config}
+            sensors={sensors}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+          />
+        )}
         
+        {/* Загальні елементи */}
         {loading && (
           <div className="loading">
             <div className="spinner"></div>
@@ -72,19 +175,6 @@ function App() {
         )}
         
         {error && <div className="error">{error}</div>}
-        
-        {!loading && !error && chartData.length > 0 && (
-          <ChartContainer 
-            data={chartData} 
-            config={config}
-          />
-        )}
-
-        {!loading && !error && config.sheetId && chartData.length === 0 && (
-          <div className="no-data">
-            📭 Дані не знайдено. Перевірте назви колонок у налаштуваннях.
-          </div>
-        )}
       </div>
     </div>
   );
