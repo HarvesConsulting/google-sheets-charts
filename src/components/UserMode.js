@@ -292,7 +292,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                   type={lineType}
                   dataKey={sensor.column}
                   stroke={sensor.color || '#3b82f6'}
-                  strokeWidth={4} // Насищеніша лінія
+                  strokeWidth={4}
+                  strokeOpacity={1} // Повна непрозорість
                   dot={false}
                   name={sensor.name}
                 />
