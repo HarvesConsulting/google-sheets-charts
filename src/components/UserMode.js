@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine, ReferenceArea
+  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  ReferenceLine
 } from 'recharts';
 import './UserMode.css';
 
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
+  const [chartType, setChartType] = useState('line');
   const [timeRange, setTimeRange] = useState('all');
 
   useEffect(() => {
@@ -70,6 +72,32 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   };
 
+  // Функція для визначення кольору точки
+  const getDotColor = (value) => {
+    if (value === null || value === undefined) return '#9CA3AF';
+    if (value >= 18) return '#3b82f6';
+    if (value > 6 && value < 18) return '#eab308';
+    return '#ef4444';
+  };
+
+  // Кастомний компонент для точок
+  const CustomizedDot = (props) => {
+    const { cx, cy, value } = props;
+
+    if (value === null || value === undefined) return null;
+
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill={getDotColor(value)}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+    );
+  };
+
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
@@ -118,105 +146,153 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
   const lineType = 'monotone';
 
-  const getYAxisRange = () => {
-    if (chartData.length === 0) return { yMin: 0, yMax: 24 };
+  // Знаходимо максимальне значення для масштабування осі Y
+  const maxValue = useMemo(() => {
+    if (!chartData.length) return 20; // значення за замовчуванням
     
-    let yMin = 0;
-    let yMax = 24;
+    let max = 0;
+    chartData.forEach(point => {
+      activeSensors.forEach(sensor => {
+        const value = point[sensor.column];
+        if (value !== null && value !== undefined && value > max) {
+          max = value;
+        }
+      });
+    });
     
-    const allValues = chartData.flatMap(point => 
-      activeSensors.map(sensor => point[sensor.column]).filter(val => val !== null)
-    );
-    
-    if (allValues.length > 0) {
-      yMin = Math.min(...allValues);
-      yMax = Math.max(...allValues);
-      
-      const padding = (yMax - yMin) * 0.1;
-      yMin = Math.min(yMin - padding, 0);
-      yMax += padding;
-    }
-    
-    return { yMin, yMax };
-  };
+    // Додаємо трохи місця зверху
+    return Math.ceil(max * 1.1);
+  }, [chartData, activeSensors]);
 
-  const { yMin, yMax } = getYAxisRange();
-
-  const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const tooltipStyle = {
-      position: 'absolute',
-      left: coordinate?.x,
-      top: coordinate?.y - 60,
-      transform: 'translateX(-50%)',
-      background: '#1e293b',
-      color: 'white',
-      border: '1px solid #475569',
-      borderRadius: '8px',
-      padding: '10px 14px',
-      fontSize: '0.9rem',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-      pointerEvents: 'none',
-      whiteSpace: 'nowrap',
-      zIndex: 999
+  const renderChart = () => {
+    const commonProps = {
+      data: chartData,
+      margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
-    return (
-      <div className="custom-tooltip" style={tooltipStyle}>
-        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#60a5fa' }}>
-          {formatTooltipDate(label)}
-        </div>
-        {payload.map((entry, i) => (
-          <div key={i} style={{ color: entry.color || '#3b82f6' }}>
-            <strong>{entry.name}:</strong> {entry.value}
-          </div>
-        ))}
-      </div>
-    );
-  };
+    const CustomTooltip = ({ active, payload, label, coordinate }) => {
+      if (!active || !payload || !payload.length) return null;
 
-  // ЯСКРАВІ ЗОНИ з більшою насиченістю
-  const renderZones = () => (
-    <>
-      {/* Червона зона: 0-6 - яскраво червона */}
-      <ReferenceArea 
-        y1={0} 
-        y2={6} 
-        fill="#ff4444" 
-        fillOpacity={0.4} 
-        stroke="none"
-      />
-      {/* Жовта зона: 6-18 - яскраво жовта */}
-      <ReferenceArea 
-        y1={6} 
-        y2={18} 
-        fill="#ffcc00" 
-        fillOpacity={0.4} 
-        stroke="none"
-      />
-      {/* Зелена зона: 18+ - яскраво зелена */}
-      <ReferenceArea 
-        y1={18} 
-        y2={yMax} 
-        fill="#44ff44" 
-        fillOpacity={0.4} 
-        stroke="none"
-      />
-      
-      {/* Додаємо межі зон для кращої видимості */}
-      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
-      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
-    </>
-  );
+      const tooltipStyle = {
+        position: 'absolute',
+        left: coordinate?.x,
+        top: coordinate?.y - 60,
+        transform: 'translateX(-50%)',
+        background: '#ffffff',
+        color: '#1e293b',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        fontSize: '0.9rem',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+        zIndex: 999
+      };
+
+      return (
+        <div className="custom-tooltip" style={tooltipStyle}>
+          <div style={{ fontWeight: '600', marginBottom: '6px' }}>
+            {formatTooltipDate(label)}
+          </div>
+          {payload.map((entry, i) => (
+            <div key={i}>
+              <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    switch (chartType) {
+      case 'area':
+        return (
+          <AreaChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <YAxis 
+              stroke="#9CA3AF" 
+              width={30}
+              domain={[0, maxValue]} // Фіксуємо початок на 0
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            {activeSensors.map(sensor => (
+              <Area
+                key={sensor.column}
+                type={lineType}
+                dataKey={sensor.column}
+                stroke={sensor.color}
+                fill={sensor.color}
+                fillOpacity={0.3}
+                strokeWidth={3}
+                dot={<CustomizedDot />}
+              />
+            ))}
+            {/* Додаємо опорні лінії для ключових значень */}
+            <ReferenceLine y={6} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+            <ReferenceLine y={18} stroke="#3b82f6" strokeDasharray="3 3" opacity={0.5} />
+          </AreaChart>
+        );
+
+      case 'bar':
+        return (
+          <BarChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <YAxis 
+              stroke="#9CA3AF" 
+              width={30}
+              domain={[0, maxValue]} // Фіксуємо початок на 0
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            {activeSensors.map(sensor => (
+              <Bar key={sensor.column} dataKey={sensor.column} fill={sensor.color} name={sensor.name} />
+            ))}
+            {/* Додаємо опорні лінії для ключових значень */}
+            <ReferenceLine y={6} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+            <ReferenceLine y={18} stroke="#3b82f6" strokeDasharray="3 3" opacity={0.5} />
+          </BarChart>
+        );
+
+      default:
+        return (
+          <LineChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <YAxis 
+              stroke="#9CA3AF" 
+              width={30}
+              domain={[0, maxValue]} // Фіксуємо початок на 0
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            {activeSensors.map(sensor => (
+              <Line
+                key={sensor.column}
+                type={lineType}
+                dataKey={sensor.column}
+                stroke={sensor.color}
+                strokeWidth={3}
+                dot={<CustomizedDot />}
+                name={sensor.name}
+              />
+            ))}
+            {/* Додаємо опорні лінії для ключових значень */}
+            <ReferenceLine y={6} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+            <ReferenceLine y={18} stroke="#3b82f6" strokeDasharray="3 3" opacity={0.5} />
+            <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+          </LineChart>
+        );
+    }
+  };
 
   if (!data || data.length === 0 || chartData.length === 0) {
     return (
       <div className="user-mode">
         <div className="no-data">
-          <div className="no-data-icon">📭</div>
-          <h2>Немає даних для побудови графіка</h2>
-          <p>Перевірте налаштування даних або спробуйте інший період</p>
+          <h2>📭 Немає даних для побудови графіка</h2>
           <button onClick={onBackToDeveloper} className="btn btn-primary">
             🔧 Повернутись до налаштувань
           </button>
@@ -227,25 +303,18 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      <header className="user-header">
-        <div className="header-content">
-          <h1>📊 Аналіз даних</h1>
-          <div className="header-stats">
-            <div className="stat-badge">
-              <span className="stat-icon">📈</span>
-              <span>{activeSensors.length} сенсорів</span>
-            </div>
-            <div className="stat-badge">
-              <span className="stat-icon">🕒</span>
-              <span>{chartData.length} точок</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="controls-panel">
         <div className="controls-group">
-          <label>Період часу:</label>
+          <label>Тип графіка:</label>
+          <select value={chartType} onChange={(e) => setChartType(e.target.value)}>
+            <option value="line">📈 Лінійний</option>
+            <option value="area">🌊 Області</option>
+            <option value="bar">📊 Стовпчики</option>
+          </select>
+        </div>
+
+        <div className="controls-group">
+          <label>Період:</label>
           <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
             <option value="1h">Остання година</option>
             <option value="6h">6 годин</option>
@@ -255,128 +324,27 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           </select>
         </div>
 
-        <div className="controls-group">
-          <label>Відображення сенсорів:</label>
-          <div className="sensors-toggle">
-            {sensors.map(sensor => (
-              <label key={sensor.column} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={visibleSensors[sensor.column] !== false}
-                  onChange={(e) => setVisibleSensors(prev => ({
-                    ...prev,
-                    [sensor.column]: e.target.checked
-                  }))}
-                />
-                <span 
-                  className="sensor-color" 
-                  style={{ backgroundColor: sensor.color || '#3b82f6' }}
-                ></span>
-                <span className="sensor-name">{sensor.name}</span>
-              </label>
-            ))}
+        {/* Легенда кольорів */}
+        <div className="color-legend">
+          <div className="legend-item">
+            <div className="legend-color" style={{backgroundColor: '#ef4444'}}></div>
+            <span>≤ 6</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{backgroundColor: '#eab308'}}></div>
+            <span>6 - 18</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{backgroundColor: '#3b82f6'}}></div>
+            <span>≥ 18</span>
           </div>
         </div>
       </div>
 
-      <div className="chart-section">
-        <div className="chart-container">
-          <ResponsiveContainer width="100%" height={500}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-              <XAxis 
-                dataKey="timestamp" 
-                tickFormatter={formatDateForDisplay} 
-                stroke="#9CA3AF" 
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="#9CA3AF" 
-                width={30} 
-                domain={[yMin, yMax]} 
-                fontSize={12}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              {renderZones()}
-              {activeSensors.map(sensor => (
-                <Line
-                  key={sensor.column}
-                  type={lineType}
-                  dataKey={sensor.column}
-                  stroke="#3b82f6" // Синя лінія
-                  strokeWidth={3}
-                  dot={false}
-                  name={sensor.name}
-                />
-              ))}
-              <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="legend-zones">
-          <div className="zone-info">
-            <span className="zone-color red"></span>
-            <span>0-6: Червона зона</span>
-          </div>
-          <div className="zone-info">
-            <span className="zone-color yellow"></span>
-            <span>6-18: Жовта зона</span>
-          </div>
-          <div className="zone-info">
-            <span className="zone-color green"></span>
-            <span>18+: Зелена зона</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="statistics-panel">
-        <h3>📈 Статистика даних</h3>
-        <div className="stats-grid">
-          {activeSensors.map(sensor => {
-            const sensorData = chartData
-              .map(point => point[sensor.column])
-              .filter(val => val !== null);
-            
-            if (sensorData.length === 0) return null;
-
-            const current = sensorData[sensorData.length - 1];
-            const min = Math.min(...sensorData);
-            const max = Math.max(...sensorData);
-            const avg = sensorData.reduce((a, b) => a + b, 0) / sensorData.length;
-
-            return (
-              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: '#3b82f6' }}>
-                <div className="stat-header">
-                  <h4>{sensor.name}</h4>
-                  <div className="data-points">{sensorData.length} точок</div>
-                </div>
-                <div className="stat-values">
-                  <div className="stat-item">
-                    <span className="stat-label">Поточне:</span>
-                    <span className="stat-value current">{current.toFixed(2)}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Мінімум:</span>
-                    <span className="stat-value min">{min.toFixed(2)}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Максимум:</span>
-                    <span className="stat-value max">{max.toFixed(2)}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Середнє:</span>
-                    <span className="stat-value avg">{avg.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="chart-container">
+        <ResponsiveContainer width="100%" height={500}>
+          {renderChart()}
+        </ResponsiveContainer>
       </div>
 
       <div className="actions-panel">
