@@ -13,7 +13,8 @@ const DeveloperPanel = ({
   const [localConfig, setLocalConfig] = useState({
     sheetId: config.sheetId || '',
     sheetName: config.sheetName || 'AppSheetView',
-    range: config.range || 'A:Z'
+    range: config.range || 'A:Z',
+    dateColumn: config.dateColumn || 'ДатаЧас'
   });
   
   const [availableColumns, setAvailableColumns] = useState([]);
@@ -132,15 +133,47 @@ const DeveloperPanel = ({
                   />
                 </div>
               </div>
+
+              {/* Вибір осей */}
+              <div className="axes-configuration">
+                <h4 className="section-subtitle">📐 Налаштування осей</h4>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      📈 Вісь X (колонка дат)
+                      <span className="required">*</span>
+                    </label>
+                    <select
+                      value={localConfig.dateColumn}
+                      onChange={(e) => handleConfigChange('dateColumn', e.target.value)}
+                      className="form-input"
+                      required
+                    >
+                      <option value="">-- Оберіть колонку з датами --</option>
+                      {availableColumns.map(col => (
+                        <option key={col} value={col}>{col}</option>
+                      ))}
+                    </select>
+                    <div className="form-hint">
+                      Колонка, що містить дати/час для осі X
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Налаштування датчиків */}
             <div className="sensors-section">
               <div className="section-header">
-                <h3 className="section-title">📊 Конфігурація датчиків</h3>
+                <h3 className="section-title">📊 Конфігурація датчиків (Вісь Y)</h3>
                 <div className="available-info">
                   <span className="info-badge">Доступні колонки: {availableColumns.length}</span>
                 </div>
+              </div>
+
+              <div className="section-description">
+                <p>Додайте датчики для відображення на графіку. Кожен датчик відповідає одній колонці даних з таблиці.</p>
               </div>
 
               <div className="sensors-list">
@@ -181,28 +214,42 @@ const DeveloperPanel = ({
                     
                     <div className="sensor-fields">
                       <div className="form-group">
-                        <label className="form-label">Назва датчика</label>
+                        <label className="form-label">
+                          Назва датчика
+                          <span className="required">*</span>
+                        </label>
                         <input
                           type="text"
                           value={sensor.name}
                           onChange={(e) => handleSensorChange(index, 'name', e.target.value)}
                           placeholder="Температура, Вологість, Тиск..."
                           className="form-input"
+                          required
                         />
                       </div>
                       
                       <div className="form-group">
-                        <label className="form-label">Колонка даних</label>
+                        <label className="form-label">
+                          Колонка даних (Y)
+                          <span className="required">*</span>
+                        </label>
                         <select
                           value={sensor.column}
                           onChange={(e) => handleSensorChange(index, 'column', e.target.value)}
                           className="form-input"
+                          required
                         >
-                          <option value="">-- Оберіть колонку --</option>
-                          {availableColumns.map(col => (
-                            <option key={col} value={col}>{col}</option>
-                          ))}
+                          <option value="">-- Оберіть колонку даних --</option>
+                          {availableColumns
+                            .filter(col => col !== localConfig.dateColumn)
+                            .map(col => (
+                              <option key={col} value={col}>{col}</option>
+                            ))
+                          }
                         </select>
+                        <div className="form-hint">
+                          Колонка з числовими даними для відображення на графіку
+                        </div>
                       </div>
                       
                       <div className="form-group">
@@ -250,11 +297,21 @@ const DeveloperPanel = ({
               <button type="button" onClick={addSensor} className="btn btn-add-sensor">
                 ➕ Додати новий датчик
               </button>
+
+              {localSensors.length === 0 && (
+                <div className="no-sensors-message">
+                  <p>🔄 Додайте хоча б один датчик для відображення графіка</p>
+                </div>
+              )}
             </div>
 
             {/* Кнопки дій */}
             <div className="action-buttons">
-              <button type="submit" className="btn btn-primary btn-large">
+              <button 
+                type="submit" 
+                className="btn btn-primary btn-large"
+                disabled={!localConfig.dateColumn || localSensors.length === 0}
+              >
                 💾 Зберегти конфігурацію
               </button>
               <button type="button" onClick={onRefresh} className="btn btn-secondary btn-large">
@@ -281,6 +338,10 @@ const DeveloperPanel = ({
                 <span className="stat-label">Доступні колонки:</span>
                 <span className="stat-value">{availableColumns.length}</span>
               </div>
+              <div className="stat-item">
+                <span className="stat-label">Вісь X:</span>
+                <span className="stat-value">{localConfig.dateColumn || 'Не обрано'}</span>
+              </div>
             </div>
             
             {availableColumns.length > 0 && (
@@ -288,8 +349,20 @@ const DeveloperPanel = ({
                 <h4>Доступні колонки:</h4>
                 <div className="columns-grid">
                   {availableColumns.map((col, index) => (
-                    <span key={col} className="column-tag">
+                    <span 
+                      key={col} 
+                      className={`column-tag ${
+                        col === localConfig.dateColumn ? 'column-tag-x' : 
+                        localSensors.some(s => s.column === col) ? 'column-tag-y' : ''
+                      }`}
+                      title={
+                        col === localConfig.dateColumn ? 'Вісь X (дати)' : 
+                        localSensors.some(s => s.column === col) ? 'Вісь Y (датчик)' : ''
+                      }
+                    >
                       {col}
+                      {col === localConfig.dateColumn && ' 📈'}
+                      {localSensors.some(s => s.column === col) && ' 📉'}
                     </span>
                   ))}
                 </div>
@@ -305,7 +378,17 @@ const DeveloperPanel = ({
                   <thead>
                     <tr>
                       {Object.keys(previewData[0]).map(key => (
-                        <th key={key}>{key}</th>
+                        <th 
+                          key={key} 
+                          className={
+                            key === localConfig.dateColumn ? 'column-x' :
+                            localSensors.some(s => s.column === key) ? 'column-y' : ''
+                          }
+                        >
+                          {key}
+                          {key === localConfig.dateColumn && ' (X)'}
+                          {localSensors.some(s => s.column === key) && ' (Y)'}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -313,7 +396,15 @@ const DeveloperPanel = ({
                     {previewData.map((row, index) => (
                       <tr key={index}>
                         {Object.keys(previewData[0]).map(key => (
-                          <td key={key}>{row[key]}</td>
+                          <td 
+                            key={key}
+                            className={
+                              key === localConfig.dateColumn ? 'column-x' :
+                              localSensors.some(s => s.column === key) ? 'column-y' : ''
+                            }
+                          >
+                            {row[key]}
+                          </td>
                         ))}
                       </tr>
                     ))}
