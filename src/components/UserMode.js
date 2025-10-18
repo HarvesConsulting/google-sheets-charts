@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine, Brush
+  ReferenceLine
 } from 'recharts';
 import './UserMode.css';
 
@@ -161,7 +161,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 dot={false}
               />
             ))}
-            <Brush dataKey="timestamp" height={30} stroke="#374151" tickFormatter={formatDateForDisplay} />
+            
           </AreaChart>
         );
 
