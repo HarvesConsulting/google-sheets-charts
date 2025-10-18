@@ -445,3 +445,39 @@
   border-radius: 50%;
   border: 1px solid #fff;
 }
+.legend-zones {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.zone-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.zone-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.zone-color.red {
+  background-color: #ffcccc;
+}
+
+.zone-color.yellow {
+  background-color: #fff3cd;
+}
+
+.zone-color.green {
+  background-color: #d4edda;
+}
