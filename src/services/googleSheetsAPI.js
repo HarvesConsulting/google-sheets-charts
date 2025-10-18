@@ -1,30 +1,34 @@
-export const getSheetData = async (sheetId, sheetName = 'Sheet1', range = 'A:Z') => {
-  try {
-    if (!sheetId) {
-      throw new Error('ID таблиці не вказано');
-    }
+// Додай цю функцію в кінець файлу, перед останнім export
+export const getAvailableColumns = (data) => {
+  if (!data || data.length === 0) return [];
+  
+  const columns = Object.keys(data[0]);
+  // Виключаємо типові колонки з датами
+  const excludeColumns = ['ДатаЧас', 'Date', 'Timestamp', 'date', 'timestamp'];
+  const dataColumns = columns.filter(col => 
+    !excludeColumns.includes(col) && 
+    col !== '' && 
+    col !== undefined
+  );
+  
+  return dataColumns;
+};
 
-    const url = `${GOOGLE_SHEETS_BASE_URL}/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=${range}`;
-    console.log('Отримую дані з URL:', url);
-    
-    const response = await axios.get(url);
-    
-    if (!response.data) {
-      throw new Error('Пуста відповідь від сервера');
-    }
-    
-    // Парсимо дані з Google Sheets
-    const jsonData = JSON.parse(response.data.substring(47).slice(0, -2));
-    return parseGoogleSheetsData(jsonData);
-  } catch (error) {
-    console.error('Помилка завантаження даних:', error);
-    
-    if (error.response?.status === 404) {
-      throw new Error('Таблицю не знайдено. Перевірте ID та доступ.');
-    } else if (error.response?.status === 403) {
-      throw new Error('Доступ заборонено. Перевірте публікацію таблиці.');
-    } else {
-      throw new Error('Не вдалося отримати дані: ' + error.message);
-    }
-  }
+// Функція для фільтрації та очищення даних для конкретного датчика
+export const cleanSensorData = (data, dateColumn, sensorColumn) => {
+  if (!data || !Array.isArray(data)) return [];
+  
+  return data
+    .filter(row => {
+      const hasDate = row[dateColumn] !== undefined && row[dateColumn] !== '' && row[dateColumn] !== null;
+      const hasSensorData = row[sensorColumn] !== undefined && row[sensorColumn] !== '' && row[sensorColumn] !== null;
+      const isSensorNumber = !isNaN(parseFloat(row[sensorColumn]));
+      
+      return hasDate && hasSensorData && isSensorNumber;
+    })
+    .map(row => ({
+      date: row[dateColumn],
+      value: parseFloat(row[sensorColumn]),
+      sensor: sensorColumn
+    }));
 };
