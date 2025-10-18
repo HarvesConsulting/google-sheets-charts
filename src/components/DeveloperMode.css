@@ -343,3 +343,101 @@
     padding: 15px;
   }
 }
+/* Стилі для датчиків */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-add-sensor {
+  padding: 10px 20px;
+  font-size: 1rem;
+}
+
+.no-sensors {
+  text-align: center;
+  padding: 30px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-sensors p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.sensors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sensor-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+  border-left: 4px solid #007bff;
+}
+
+.sensor-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.sensor-number {
+  background: #007bff;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.sensor-header h4 {
+  margin: 0;
+  flex: 1;
+  color: #333;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.sensor-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.color-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-input {
+  width: 50px;
+  height: 40px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.color-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #495057;
+}

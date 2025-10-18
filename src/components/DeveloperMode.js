@@ -7,13 +7,16 @@ const DeveloperMode = ({
   data, 
   loading, 
   error, 
+  sensors,
   onConfigUpdate, 
+  onSensorsUpdate,
   onFetchData,
   onEnterUserMode,
   onSaveConfig,
   onClearConfig
 }) => {
   const [localConfig, setLocalConfig] = useState(config);
+  const [localSensors, setLocalSensors] = useState(sensors || []);
   const [availableColumns, setAvailableColumns] = useState([]);
 
   useEffect(() => {
@@ -27,10 +30,12 @@ const DeveloperMode = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     onConfigUpdate(localConfig);
+    onSensorsUpdate(localSensors);
   };
 
   const handleFetchData = () => {
     onConfigUpdate(localConfig);
+    onSensorsUpdate(localSensors);
     setTimeout(() => {
       onFetchData(localConfig.sheetId);
     }, 100);
@@ -42,10 +47,43 @@ const DeveloperMode = ({
       [field]: value
     };
     setLocalConfig(newConfig);
-    onConfigUpdate(newConfig);
   };
 
-  const isFormValid = localConfig.sheetId && localConfig.xAxis && localConfig.yAxis;
+  const handleSensorChange = (index, field, value) => {
+    const updatedSensors = [...localSensors];
+    updatedSensors[index] = {
+      ...updatedSensors[index],
+      [field]: value
+    };
+    setLocalSensors(updatedSensors);
+  };
+
+  const addSensor = () => {
+    const availableForSensors = availableColumns.filter(col => 
+      col !== localConfig.xAxis && 
+      !localSensors.some(sensor => sensor.column === col)
+    );
+
+    if (availableForSensors.length === 0) {
+      alert('⚠️ Всі доступні колонки вже додані як датчики');
+      return;
+    }
+
+    const newSensor = {
+      name: `Датчик ${localSensors.length + 1}`,
+      column: availableForSensors[0],
+      color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+      visible: true,
+      type: 'line'
+    };
+    setLocalSensors(prev => [...prev, newSensor]);
+  };
+
+  const removeSensor = (index) => {
+    setLocalSensors(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const isFormValid = localConfig.sheetId && localConfig.xAxis && localSensors.length > 0;
   const hasData = data.length > 0;
 
   return (
@@ -87,38 +125,39 @@ const DeveloperMode = ({
 
             {/* Секція вибору даних */}
             {hasData && (
-              <div className="form-section">
-                <h3>📊 Вибір даних для графіка</h3>
-                
-                <div className="data-selection-info">
-                  <div className="info-card">
-                    <span className="info-badge">📋 Завантажено рядків: {data.length}</span>
-                    <span className="info-badge">📊 Доступно колонок: {availableColumns.length}</span>
-                  </div>
+              <>
+                <div className="form-section">
+                  <h3>📊 Вибір даних для графіка</h3>
                   
-                  {availableColumns.length > 0 && (
-                    <div className="columns-preview">
-                      <h4>Доступні колонки:</h4>
-                      <div className="columns-tags">
-                        {availableColumns.map(col => (
-                          <span 
-                            key={col} 
-                            className={`column-tag ${
-                              col === localConfig.xAxis ? 'column-tag-x' : 
-                              col === localConfig.yAxis ? 'column-tag-y' : ''
-                            }`}
-                          >
-                            {col}
-                            {col === localConfig.xAxis && ' (X)'}
-                            {col === localConfig.yAxis && ' (Y)'}
-                          </span>
-                        ))}
-                      </div>
+                  <div className="data-selection-info">
+                    <div className="info-card">
+                      <span className="info-badge">📋 Завантажено рядків: {data.length}</span>
+                      <span className="info-badge">📊 Доступно колонок: {availableColumns.length}</span>
+                      <span className="info-badge">📈 Додано датчиків: {localSensors.length}</span>
                     </div>
-                  )}
-                </div>
+                    
+                    {availableColumns.length > 0 && (
+                      <div className="columns-preview">
+                        <h4>Доступні колонки:</h4>
+                        <div className="columns-tags">
+                          {availableColumns.map(col => (
+                            <span 
+                              key={col} 
+                              className={`column-tag ${
+                                col === localConfig.xAxis ? 'column-tag-x' : 
+                                localSensors.some(s => s.column === col) ? 'column-tag-y' : ''
+                              }`}
+                            >
+                              {col}
+                              {col === localConfig.xAxis && ' (X)'}
+                              {localSensors.some(s => s.column === col) && ' (Y)'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="columns-grid">
                   <div className="form-group">
                     <label>📈 Вісь X (незалежна змінна) *</label>
                     <select
@@ -133,24 +172,90 @@ const DeveloperMode = ({
                     </select>
                     <small>Час, дата або інша незалежна змінна</small>
                   </div>
-
-                  <div className="form-group">
-                    <label>📉 Вісь Y (залежна змінна) *</label>
-                    <select
-                      value={localConfig.yAxis}
-                      onChange={(e) => handleConfigChange('yAxis', e.target.value)}
-                      className="form-input"
-                    >
-                      <option value="">-- Оберіть колонку для осі Y --</option>
-                      {availableColumns.map(col => (
-                        <option key={col} value={col}>{col}</option>
-                      ))}
-                    </select>
-                    <small>Числові значення, що відображаються на графіку</small>
-                  </div>
                 </div>
 
-                <div className="columns-grid">
+                {/* Секція датчиків */}
+                <div className="form-section">
+                  <div className="section-header">
+                    <h3>📈 Керування датчиками (Вісь Y)</h3>
+                    <button 
+                      type="button" 
+                      onClick={addSensor}
+                      className="btn btn-success btn-add-sensor"
+                    >
+                      ➕ Додати датчик
+                    </button>
+                  </div>
+
+                  {localSensors.length === 0 ? (
+                    <div className="no-sensors">
+                      <p>🎯 Ще не додано жодного датчика. Натисніть "Додати датчик" щоб почати.</p>
+                    </div>
+                  ) : (
+                    <div className="sensors-list">
+                      {localSensors.map((sensor, index) => (
+                        <div key={index} className="sensor-card">
+                          <div className="sensor-header">
+                            <div className="sensor-number">#{index + 1}</div>
+                            <h4>{sensor.name}</h4>
+                            <button 
+                              type="button" 
+                              onClick={() => removeSensor(index)}
+                              className="btn btn-danger btn-small"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                          
+                          <div className="sensor-fields">
+                            <div className="form-group">
+                              <label>Назва датчика</label>
+                              <input
+                                type="text"
+                                value={sensor.name}
+                                onChange={(e) => handleSensorChange(index, 'name', e.target.value)}
+                                placeholder="Назва датчика..."
+                                className="form-input"
+                              />
+                            </div>
+                            
+                            <div className="form-group">
+                              <label>Колонка даних *</label>
+                              <select
+                                value={sensor.column}
+                                onChange={(e) => handleSensorChange(index, 'column', e.target.value)}
+                                className="form-input"
+                              >
+                                <option value="">-- Оберіть колонку --</option>
+                                {availableColumns
+                                  .filter(col => col !== localConfig.xAxis)
+                                  .map(col => (
+                                    <option key={col} value={col}>{col}</option>
+                                  ))
+                                }
+                              </select>
+                            </div>
+                            
+                            <div className="form-group">
+                              <label>Колір лінії</label>
+                              <div className="color-input-group">
+                                <input
+                                  type="color"
+                                  value={sensor.color}
+                                  onChange={(e) => handleSensorChange(index, 'color', e.target.value)}
+                                  className="color-input"
+                                />
+                                <span className="color-value">{sensor.color}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-section">
                   <div className="form-group">
                     <label>🏷️ Назва графіка</label>
                     <input
@@ -160,39 +265,20 @@ const DeveloperMode = ({
                       placeholder="Графік залежності..."
                       className="form-input"
                     />
-                    <small>Заголовок, що відображатиметься над графіком</small>
-                  </div>
-
-                  <div className="form-group">
-                    <label>🏷️ Підпис осі Y</label>
-                    <input
-                      type="text"
-                      value={localConfig.yAxisLabel}
-                      onChange={(e) => handleConfigChange('yAxisLabel', e.target.value)}
-                      placeholder="Значення"
-                      className="form-input"
-                    />
-                    <small>Підпис для вертикальної осі</small>
                   </div>
                 </div>
-
-                {/* Підказка по вибору осей */}
-                <div className="selection-hint">
-                  <h4>💡 Порада щодо вибору осей:</h4>
-                  <ul>
-                    <li><strong>Вісь X (горизонтальна):</strong> виберіть колонку з датами, часом або категориями</li>
-                    <li><strong>Вісь Y (вертикальна):</strong> виберіть колонку з числовими значеннями для відображення</li>
-                    <li><strong>Приклад:</strong> X = "ДатаЧас", Y = "Шпалера"</li>
-                  </ul>
-                </div>
-              </div>
+              </>
             )}
 
             {/* Кнопки дій */}
             <div className="action-buttons">
               <button 
                 type="button" 
-                onClick={onSaveConfig}
+                onClick={() => {
+                  onConfigUpdate(localConfig);
+                  onSensorsUpdate(localSensors);
+                  onSaveConfig();
+                }}
                 disabled={!isFormValid}
                 className="btn btn-success"
               >
@@ -214,7 +300,7 @@ const DeveloperMode = ({
                   disabled={!isFormValid}
                   className="btn btn-primary"
                 >
-                  📊 Перейти до графіка
+                  📊 Перейти до графіка ({localSensors.length} датчик{localSensors.length !== 1 ? 'ів' : ''})
                 </button>
               )}
             </div>
@@ -242,12 +328,12 @@ const DeveloperMode = ({
                           key={col} 
                           className={
                             col === localConfig.xAxis ? 'column-x' :
-                            col === localConfig.yAxis ? 'column-y' : ''
+                            localSensors.some(s => s.column === col) ? 'column-y' : ''
                           }
                         >
                           {col}
                           {col === localConfig.xAxis && ' (X)'}
-                          {col === localConfig.yAxis && ' (Y)'}
+                          {localSensors.some(s => s.column === col) && ' (Y)'}
                         </th>
                       ))}
                     </tr>
@@ -260,7 +346,7 @@ const DeveloperMode = ({
                             key={col}
                             className={
                               col === localConfig.xAxis ? 'column-x' :
-                              col === localConfig.yAxis ? 'column-y' : ''
+                              localSensors.some(s => s.column === col) ? 'column-y' : ''
                             }
                           >
                             {row[col] || '-'}

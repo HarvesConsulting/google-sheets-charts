@@ -1,16 +1,40 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import './UserMode.css';
 
-const UserMode = ({ data, config, onBackToStart, onBackToDeveloper }) => {
+const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
+  const [visibleSensors, setVisibleSensors] = useState({});
+
+  // Ініціалізація видимості датчиків
+  useState(() => {
+    const initialVisibility = {};
+    sensors.forEach(sensor => {
+      initialVisibility[sensor.column] = sensor.visible !== false;
+    });
+    setVisibleSensors(initialVisibility);
+  }, [sensors]);
+
   // Підготовка даних для графіка
-  const chartData = data.map(row => ({
-    name: row[config.xAxis],
-    value: parseFloat(row[config.yAxis]) || 0
-  })).filter(item => item.value !== null && item.name);
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
+    return data.map(row => {
+      const dataPoint = {
+        name: row[config.xAxis]
+      };
+      
+      sensors.forEach(sensor => {
+        if (visibleSensors[sensor.column] !== false) {
+          dataPoint[sensor.column] = row[sensor.column] ? parseFloat(row[sensor.column]) || 0 : null;
+        }
+      });
+      
+      return dataPoint;
+    }).filter(item => item.name); // Фільтруємо рядки без значень осі X
+  }, [data, config.xAxis, sensors, visibleSensors]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -36,6 +60,15 @@ const UserMode = ({ data, config, onBackToStart, onBackToDeveloper }) => {
     }
   };
 
+  const toggleSensorVisibility = (sensorColumn) => {
+    setVisibleSensors(prev => ({
+      ...prev,
+      [sensorColumn]: !prev[sensorColumn]
+    }));
+  };
+
+  const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+
   if (data.length === 0) {
     return (
       <div className="user-mode">
@@ -56,12 +89,34 @@ const UserMode = ({ data, config, onBackToStart, onBackToDeveloper }) => {
       <div className="user-header">
         <h2>{config.chartTitle || 'Графік даних'}</h2>
         <div className="chart-info">
-          <span>📈 {config.yAxis} по {config.xAxis}</span>
+          <span>📈 {activeSensors.length} з {sensors.length} датчиків активні</span>
           <span>📋 {chartData.length} точок даних</span>
           <span>🕒 Останнє оновлення: {new Date().toLocaleTimeString()}</span>
         </div>
       </div>
 
+      {/* Контроль видимості датчиків */}
+      <div className="sensors-controls">
+        <h4>🎛️ Керування датчиками:</h4>
+        <div className="sensors-toggle">
+          {sensors.map(sensor => (
+            <label key={sensor.column} className="sensor-toggle-item">
+              <input
+                type="checkbox"
+                checked={visibleSensors[sensor.column] !== false}
+                onChange={() => toggleSensorVisibility(sensor.column)}
+              />
+              <span 
+                className="sensor-color-indicator"
+                style={{ backgroundColor: sensor.color }}
+              ></span>
+              {sensor.name}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Графік */}
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={500}>
           <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
@@ -73,48 +128,62 @@ const UserMode = ({ data, config, onBackToStart, onBackToDeveloper }) => {
               label={{ value: config.xAxis, position: 'insideBottom', offset: -5 }}
             />
             <YAxis 
-              label={{ value: config.yAxisLabel || config.yAxis, angle: -90, position: 'insideLeft' }}
+              label={{ value: config.yAxisLabel || 'Значення', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip 
-              formatter={(value) => [value, config.yAxis]}
+              formatter={(value, name) => {
+                const sensor = sensors.find(s => s.column === name);
+                return [value, sensor ? sensor.name : name];
+              }}
               labelFormatter={formatDate}
             />
             <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="value" 
-              stroke="#007bff" 
-              strokeWidth={3}
-              dot={{ fill: '#007bff', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#007bff', strokeWidth: 2 }}
-              name={config.yAxis}
-            />
+            {activeSensors.map((sensor) => (
+              <Line 
+                key={sensor.column}
+                type="monotone" 
+                dataKey={sensor.column} 
+                stroke={sensor.color} 
+                strokeWidth={3}
+                dot={{ fill: sensor.color, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: sensor.color, strokeWidth: 2 }}
+                name={sensor.name}
+                isAnimationActive={true}
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
+      {/* Статистика */}
       <div className="data-summary">
         <div className="summary-card">
           <h4>📈 Статистика даних</h4>
           <div className="stats-grid">
-            <div className="stat">
-              <span className="stat-label">Мінімальне значення:</span>
-              <span className="stat-value">
-                {Math.min(...chartData.map(d => d.value)).toFixed(2)}
-              </span>
-            </div>
-            <div className="stat">
-              <span className="stat-label">Максимальне значення:</span>
-              <span className="stat-value">
-                {Math.max(...chartData.map(d => d.value)).toFixed(2)}
-              </span>
-            </div>
-            <div className="stat">
-              <span className="stat-label">Середнє значення:</span>
-              <span className="stat-value">
-                {(chartData.reduce((a, b) => a + b.value, 0) / chartData.length).toFixed(2)}
-              </span>
-            </div>
+            {activeSensors.map(sensor => {
+              const sensorData = chartData.map(d => d[sensor.column]).filter(val => val !== null);
+              const min = Math.min(...sensorData);
+              const max = Math.max(...sensorData);
+              const avg = sensorData.reduce((a, b) => a + b, 0) / sensorData.length;
+              
+              return (
+                <div key={sensor.column} className="sensor-stats">
+                  <h5 style={{ color: sensor.color }}>{sensor.name}</h5>
+                  <div className="stat">
+                    <span className="stat-label">Мін:</span>
+                    <span className="stat-value">{min.toFixed(2)}</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-label">Макс:</span>
+                    <span className="stat-value">{max.toFixed(2)}</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-label">Сер:</span>
+                    <span className="stat-value">{avg.toFixed(2)}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
