@@ -126,25 +126,31 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
-    const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, coordinate }) => {
   if (!active || !payload || !payload.length) return null;
 
+  const tooltipStyle = {
+    position: 'absolute',
+    left: coordinate?.x,
+    top: coordinate?.y - 60, // Позиція над курсором/точкою
+    transform: 'translateX(-50%)',
+    background: '#ffffff', // Білий фон
+    color: '#1e293b',       // Темний текст
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    fontSize: '0.9rem',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+    pointerEvents: 'none',
+    whiteSpace: 'nowrap',
+    zIndex: 999
+  };
+
   return (
-    <div
-      className="custom-tooltip"
-      style={{
-        position: 'absolute',
-        transform: 'translate(-50%, -100%)',
-        background: 'rgba(17, 24, 39, 0.95)',
-        border: '1px solid #374151',
-        borderRadius: '8px',
-        color: 'white',
-        padding: '10px',
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <p>{formatTooltipDate(label)}</p>
+    <div className="custom-tooltip" style={tooltipStyle}>
+      <div style={{ fontWeight: '600', marginBottom: '6px' }}>
+        {formatTooltipDate(label)}
+      </div>
       {payload.map((entry, i) => (
         <div key={i}>
           <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
@@ -153,8 +159,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     </div>
   );
 };
-
-
     switch (chartType) {
       case 'area':
         return (
