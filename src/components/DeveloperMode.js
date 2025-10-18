@@ -9,7 +9,8 @@ const DeveloperMode = ({
   error, 
   onConfigUpdate, 
   onFetchData,
-  onEnterUserMode 
+  onEnterUserMode,
+  onSaveConfig
 }) => {
   const [localConfig, setLocalConfig] = useState(config);
   const [availableColumns, setAvailableColumns] = useState([]);
@@ -18,8 +19,17 @@ const DeveloperMode = ({
     if (data && data.length > 0) {
       const columns = getAvailableColumns(data);
       setAvailableColumns(columns);
+      
+      // Автоматично вибираємо перші доступні колонки, якщо не вибрані
+      if (!localConfig.xAxis && columns.length > 0) {
+        const newConfig = { ...localConfig };
+        if (!newConfig.xAxis) newConfig.xAxis = columns[0];
+        if (!newConfig.yAxis && columns.length > 1) newConfig.yAxis = columns[1];
+        setLocalConfig(newConfig);
+        onConfigUpdate(newConfig);
+      }
     }
-  }, [data]);
+  }, [data, localConfig, onConfigUpdate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -29,18 +39,21 @@ const DeveloperMode = ({
   const handleFetchData = () => {
     onConfigUpdate(localConfig);
     setTimeout(() => {
-      onFetchData();
+      onFetchData(localConfig.sheetId);
     }, 100);
   };
 
   const handleConfigChange = (field, value) => {
-    setLocalConfig(prev => ({
-      ...prev,
+    const newConfig = {
+      ...localConfig,
       [field]: value
-    }));
+    };
+    setLocalConfig(newConfig);
+    onConfigUpdate(newConfig);
   };
 
   const isFormValid = localConfig.sheetId && localConfig.xAxis && localConfig.yAxis;
+  const hasData = data.length > 0;
 
   return (
     <div className="developer-mode">
@@ -66,60 +79,80 @@ const DeveloperMode = ({
                 />
                 <small>ID знаходиться між /d/ та /edit в URL таблиці</small>
               </div>
+
+              <button 
+                type="button" 
+                onClick={handleFetchData}
+                disabled={!localConfig.sheetId || loading}
+                className="btn btn-primary btn-load-data"
+              >
+                {loading ? '🔄 Завантаження...' : '📥 Завантажити таблицю'}
+              </button>
             </div>
 
-            <div className="form-section">
-              <h3>📐 Вибір даних для графіка</h3>
-              
-              <div className="form-group">
-                <label>📈 Вісь X (дата/час) *</label>
-                <select
-                  value={localConfig.xAxis}
-                  onChange={(e) => handleConfigChange('xAxis', e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">-- Оберіть колонку --</option>
-                  {availableColumns.map(col => (
-                    <option key={col} value={col}>{col}</option>
-                  ))}
-                </select>
-                <small>Колонка з датами та часом для горизонтальної осі</small>
-              </div>
-
-              <div className="form-group">
-                <label>📉 Вісь Y (значення) *</label>
-                <select
-                  value={localConfig.yAxis}
-                  onChange={(e) => handleConfigChange('yAxis', e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">-- Оберіть колонку --</option>
-                  {availableColumns
-                    .filter(col => col !== localConfig.xAxis)
-                    .map(col => (
+            {hasData && (
+              <div className="form-section">
+                <h3>📐 Вибір даних для графіка</h3>
+                
+                <div className="columns-info">
+                  <span className="info-badge">
+                    📋 Доступно колонок: {availableColumns.length}
+                  </span>
+                </div>
+                
+                <div className="form-group">
+                  <label>📈 Вісь X (дата/час) *</label>
+                  <select
+                    value={localConfig.xAxis}
+                    onChange={(e) => handleConfigChange('xAxis', e.target.value)}
+                    className="form-input"
+                    disabled={!hasData}
+                  >
+                    <option value="">-- Оберіть колонку --</option>
+                    {availableColumns.map(col => (
                       <option key={col} value={col}>{col}</option>
-                    ))
-                  }
-                </select>
-                <small>Колонка з числовими даними для вертикальної осі</small>
+                    ))}
+                  </select>
+                  <small>Колонка з датами та часом для горизонтальної осі</small>
+                </div>
+
+                <div className="form-group">
+                  <label>📉 Вісь Y (значення) *</label>
+                  <select
+                    value={localConfig.yAxis}
+                    onChange={(e) => handleConfigChange('yAxis', e.target.value)}
+                    className="form-input"
+                    disabled={!hasData}
+                  >
+                    <option value="">-- Оберіть колонку --</option>
+                    {availableColumns
+                      .filter(col => col !== localConfig.xAxis)
+                      .map(col => (
+                        <option key={col} value={col}>{col}</option>
+                      ))
+                    }
+                  </select>
+                  <small>Колонка з числовими даними для вертикальної осі</small>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="action-buttons">
               <button 
                 type="button" 
-                onClick={handleFetchData}
-                disabled={!isFormValid || loading}
-                className="btn btn-primary"
+                onClick={onSaveConfig}
+                disabled={!isFormValid}
+                className="btn btn-success"
               >
-                {loading ? '🔄 Завантаження...' : '📥 Завантажити дані'}
+                💾 Запам'ятати таблицю
               </button>
               
-              {data.length > 0 && (
+              {hasData && (
                 <button 
                   type="button" 
                   onClick={onEnterUserMode}
-                  className="btn btn-success"
+                  disabled={!isFormValid}
+                  className="btn btn-primary"
                 >
                   📊 Перейти до графіка
                 </button>
@@ -133,7 +166,7 @@ const DeveloperMode = ({
             </div>
           )}
 
-          {data.length > 0 && (
+          {hasData && (
             <div className="data-preview">
               <h4>📋 Попередній перегляд даних ({data.length} рядків)</h4>
               <div className="preview-table">

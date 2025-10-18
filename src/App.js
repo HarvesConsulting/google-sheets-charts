@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
 import DeveloperMode from './components/DeveloperMode';
 import UserMode from './components/UserMode';
@@ -6,18 +6,30 @@ import StartScreen from './components/StartScreen';
 import './App.css';
 
 function App() {
-  const [currentMode, setCurrentMode] = useState('start'); // 'start', 'developer', 'user'
+  const [currentMode, setCurrentMode] = useState('start');
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [config, setConfig] = useState({
     sheetId: '',
-    xAxis: 'ДатаЧас',
-    yAxis: 'Шпалера'
+    xAxis: '',
+    yAxis: ''
   });
 
-  const fetchData = useCallback(async () => {
-    if (!config.sheetId) {
+  // Завантажуємо збережену конфігурацію при старті
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('googleSheetsConfig');
+    if (savedConfig) {
+      const parsedConfig = JSON.parse(savedConfig);
+      setConfig(parsedConfig);
+      console.log('Завантажено збережену конфігурацію:', parsedConfig);
+    }
+  }, []);
+
+  const fetchData = useCallback(async (sheetId = config.sheetId) => {
+    const targetSheetId = sheetId || config.sheetId;
+    
+    if (!targetSheetId) {
       setError('⚠️ Будь ласка, введіть ID таблиці');
       return;
     }
@@ -26,9 +38,15 @@ function App() {
     setError('');
     
     try {
-      const data = await getSheetData(config.sheetId, 'AppSheetView', 'A:Z');
+      const data = await getSheetData(targetSheetId, 'AppSheetView', 'A:Z');
       setChartData(data || []);
       console.log('Дані успішно завантажено:', data?.length, 'рядків');
+      
+      // Оновлюємо sheetId в конфігурації
+      if (sheetId) {
+        const newConfig = { ...config, sheetId };
+        setConfig(newConfig);
+      }
     } catch (err) {
       console.error('Помилка завантаження:', err);
       setError('❌ Помилка завантаження даних. Перевірте ID таблиці.');
@@ -36,17 +54,26 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [config.sheetId]);
+  }, [config]);
 
   const handleConfigUpdate = (newConfig) => {
     setConfig(newConfig);
   };
 
+  const handleSaveConfig = () => {
+    if (config.sheetId && config.xAxis && config.yAxis) {
+      localStorage.setItem('googleSheetsConfig', JSON.stringify(config));
+      alert('✅ Конфігурацію успішно збережено!');
+    } else {
+      alert('⚠️ Заповніть всі поля перед збереженням');
+    }
+  };
+
   const handleEnterUserMode = () => {
-    if (chartData.length > 0) {
+    if (chartData.length > 0 && config.xAxis && config.yAxis) {
       setCurrentMode('user');
     } else {
-      setError('Спочатку завантажте дані в режимі розробника');
+      setError('Спочатку завантажте дані та оберіть осі X та Y');
     }
   };
 
@@ -61,7 +88,18 @@ function App() {
         {currentMode === 'start' && (
           <StartScreen 
             onDeveloperMode={() => setCurrentMode('developer')}
-            onUserMode={() => setCurrentMode('user')}
+            onUserMode={() => {
+              const savedConfig = localStorage.getItem('googleSheetsConfig');
+              if (savedConfig) {
+                const parsedConfig = JSON.parse(savedConfig);
+                setConfig(parsedConfig);
+                fetchData(parsedConfig.sheetId);
+                setCurrentMode('user');
+              } else {
+                setCurrentMode('user');
+              }
+            }}
+            hasSavedConfig={!!localStorage.getItem('googleSheetsConfig')}
           />
         )}
 
@@ -74,6 +112,7 @@ function App() {
             onConfigUpdate={handleConfigUpdate}
             onFetchData={fetchData}
             onEnterUserMode={handleEnterUserMode}
+            onSaveConfig={handleSaveConfig}
           />
         )}
 

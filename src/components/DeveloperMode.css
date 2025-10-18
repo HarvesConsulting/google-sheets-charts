@@ -165,3 +165,34 @@
   color: #6c757d;
   font-style: italic;
 }
+.btn-load-data {
+  width: 100%;
+  margin-top: 10px;
+  padding: 15px;
+  font-size: 1.1rem;
+}
+
+.columns-info {
+  margin-bottom: 20px;
+}
+
+.info-badge {
+  background: #007bff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  flex: 1;
+  min-width: 200px;
+}
