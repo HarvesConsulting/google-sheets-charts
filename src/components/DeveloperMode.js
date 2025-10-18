@@ -10,7 +10,8 @@ const DeveloperMode = ({
   onConfigUpdate, 
   onFetchData,
   onEnterUserMode,
-  onSaveConfig
+  onSaveConfig,
+  onClearConfig
 }) => {
   const [localConfig, setLocalConfig] = useState(config);
   const [availableColumns, setAvailableColumns] = useState([]);
@@ -19,17 +20,8 @@ const DeveloperMode = ({
     if (data && data.length > 0) {
       const columns = getAvailableColumns(data);
       setAvailableColumns(columns);
-      
-      // Автоматично вибираємо перші доступні колонки, якщо не вибрані
-      if (!localConfig.xAxis && columns.length > 0) {
-        const newConfig = { ...localConfig };
-        if (!newConfig.xAxis) newConfig.xAxis = columns[0];
-        if (!newConfig.yAxis && columns.length > 1) newConfig.yAxis = columns[1];
-        setLocalConfig(newConfig);
-        onConfigUpdate(newConfig);
-      }
     }
-  }, [data, localConfig, onConfigUpdate]);
+  }, [data]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,18 +50,20 @@ const DeveloperMode = ({
   return (
     <div className="developer-mode">
       <div className="mode-header">
-        <h2>👨‍💻 Режим розробника</h2>
-        <p>Налаштуйте підключення до Google Sheets та виберіть дані для графіка</p>
+        <h2>👨‍💻 Режим налаштування</h2>
+        <p>Налаштуйте підключення до Google Sheets та конфігуруйте графік</p>
       </div>
 
       <div className="developer-content">
         <div className="config-panel">
           <form onSubmit={handleSubmit} className="config-form">
+            
+            {/* Секція підключення */}
             <div className="form-section">
-              <h3>🔗 Підключення до Google Sheets</h3>
+              <h3>🔗 Підключення до даних</h3>
               
               <div className="form-group">
-                <label>📎 ID таблиці Google Sheets *</label>
+                <label>📎 ID Google Sheets таблиці *</label>
                 <input
                   type="text"
                   value={localConfig.sheetId}
@@ -77,7 +71,7 @@ const DeveloperMode = ({
                   placeholder="1DcLfPMBDavVdnaqRgT5XQFmWDcOCtnWrVmpSRD7EEa4"
                   className="form-input"
                 />
-                <small>ID знаходиться між /d/ та /edit в URL таблиці</small>
+                <small>ID знаходиться між /d/ та /edit в URL вашої таблиці</small>
               </div>
 
               <button 
@@ -86,57 +80,83 @@ const DeveloperMode = ({
                 disabled={!localConfig.sheetId || loading}
                 className="btn btn-primary btn-load-data"
               >
-                {loading ? '🔄 Завантаження...' : '📥 Завантажити таблицю'}
+                {loading ? '🔄 Завантаження...' : '📥 Завантажити дані з таблиці'}
               </button>
             </div>
 
+            {/* Секція вибору даних */}
             {hasData && (
               <div className="form-section">
-                <h3>📐 Вибір даних для графіка</h3>
+                <h3>📊 Вибір даних для графіка</h3>
                 
-                <div className="columns-info">
-                  <span className="info-badge">
-                    📋 Доступно колонок: {availableColumns.length}
-                  </span>
-                </div>
-                
-                <div className="form-group">
-                  <label>📈 Вісь X (дата/час) *</label>
-                  <select
-                    value={localConfig.xAxis}
-                    onChange={(e) => handleConfigChange('xAxis', e.target.value)}
-                    className="form-input"
-                    disabled={!hasData}
-                  >
-                    <option value="">-- Оберіть колонку --</option>
-                    {availableColumns.map(col => (
-                      <option key={col} value={col}>{col}</option>
-                    ))}
-                  </select>
-                  <small>Колонка з датами та часом для горизонтальної осі</small>
+                <div className="data-selection-info">
+                  <div className="info-card">
+                    <span className="info-badge">📋 Завантажено рядків: {data.length}</span>
+                    <span className="info-badge">📊 Доступно колонок: {availableColumns.length}</span>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>📉 Вісь Y (значення) *</label>
-                  <select
-                    value={localConfig.yAxis}
-                    onChange={(e) => handleConfigChange('yAxis', e.target.value)}
-                    className="form-input"
-                    disabled={!hasData}
-                  >
-                    <option value="">-- Оберіть колонку --</option>
-                    {availableColumns
-                      .filter(col => col !== localConfig.xAxis)
-                      .map(col => (
+                <div className="columns-grid">
+                  <div className="form-group">
+                    <label>📈 Вісь X (незалежна змінна) *</label>
+                    <select
+                      value={localConfig.xAxis}
+                      onChange={(e) => handleConfigChange('xAxis', e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">-- Оберіть колонку для осі X --</option>
+                      {availableColumns.map(col => (
                         <option key={col} value={col}>{col}</option>
-                      ))
-                    }
-                  </select>
-                  <small>Колонка з числовими даними для вертикальної осі</small>
+                      ))}
+                    </select>
+                    <small>Час, дата або інша незалежна змінна</small>
+                  </div>
+
+                  <div className="form-group">
+                    <label>📉 Вісь Y (залежна змінна) *</label>
+                    <select
+                      value={localConfig.yAxis}
+                      onChange={(e) => handleConfigChange('yAxis', e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">-- Оберіть колонку для осі Y --</option>
+                      {availableColumns.map(col => (
+                        <option key={col} value={col}>{col}</option>
+                      ))}
+                    </select>
+                    <small>Числові значення, що відображаються на графіку</small>
+                  </div>
+                </div>
+
+                <div className="columns-grid">
+                  <div className="form-group">
+                    <label>🏷️ Назва графіка</label>
+                    <input
+                      type="text"
+                      value={localConfig.chartTitle}
+                      onChange={(e) => handleConfigChange('chartTitle', e.target.value)}
+                      placeholder="Графік залежності..."
+                      className="form-input"
+                    />
+                    <small>Заголовок, що відображатиметься над графіком</small>
+                  </div>
+
+                  <div className="form-group">
+                    <label>🏷️ Підпис осі Y</label>
+                    <input
+                      type="text"
+                      value={localConfig.yAxisLabel}
+                      onChange={(e) => handleConfigChange('yAxisLabel', e.target.value)}
+                      placeholder="Значення"
+                      className="form-input"
+                    />
+                    <small>Підпис для вертикальної осі</small>
+                  </div>
                 </div>
               </div>
             )}
 
+            {/* Кнопки дій */}
             <div className="action-buttons">
               <button 
                 type="button" 
@@ -144,7 +164,15 @@ const DeveloperMode = ({
                 disabled={!isFormValid}
                 className="btn btn-success"
               >
-                💾 Запам'ятати таблицю
+                💾 Зберегти конфігурацію
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={onClearConfig}
+                className="btn btn-warning"
+              >
+                🗑️ Очистити налаштування
               </button>
               
               {hasData && (
@@ -166,29 +194,50 @@ const DeveloperMode = ({
             </div>
           )}
 
+          {/* Попередній перегляд даних */}
           {hasData && (
-            <div className="data-preview">
-              <h4>📋 Попередній перегляд даних ({data.length} рядків)</h4>
+            <div className="data-preview-section">
+              <h4>👀 Попередній перегляд даних</h4>
               <div className="preview-table">
                 <table>
                   <thead>
                     <tr>
-                      <th className="axis-x">{localConfig.xAxis}</th>
-                      <th className="axis-y">{localConfig.yAxis}</th>
+                      {availableColumns.map(col => (
+                        <th 
+                          key={col} 
+                          className={
+                            col === localConfig.xAxis ? 'column-x' :
+                            col === localConfig.yAxis ? 'column-y' : ''
+                          }
+                        >
+                          {col}
+                          {col === localConfig.xAxis && ' (X)'}
+                          {col === localConfig.yAxis && ' (Y)'}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {data.slice(0, 5).map((row, index) => (
+                    {data.slice(0, 8).map((row, index) => (
                       <tr key={index}>
-                        <td>{row[localConfig.xAxis]}</td>
-                        <td>{row[localConfig.yAxis]}</td>
+                        {availableColumns.map(col => (
+                          <td 
+                            key={col}
+                            className={
+                              col === localConfig.xAxis ? 'column-x' :
+                              col === localConfig.yAxis ? 'column-y' : ''
+                            }
+                          >
+                            {row[col]}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {data.length > 5 && (
+                {data.length > 8 && (
                   <div className="preview-more">
-                    ... і ще {data.length - 5} рядків
+                    ... і ще {data.length - 8} рядків
                   </div>
                 )}
               </div>

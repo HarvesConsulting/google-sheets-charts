@@ -1,198 +1,232 @@
 .developer-mode {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
 .mode-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
 }
 
 .mode-header h2 {
   color: #333;
   margin-bottom: 10px;
+  font-size: 2.2rem;
+}
+
+.mode-header p {
+  color: #666;
+  font-size: 1.2rem;
 }
 
 .config-panel {
   background: white;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  border-radius: 15px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .form-section {
-  margin-bottom: 30px;
-  padding-bottom: 25px;
-  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #f8f9fa;
 }
 
 .form-section h3 {
-  color: #495057;
+  color: #2c3e50;
+  margin-bottom: 25px;
+  font-size: 1.4rem;
+  border-left: 4px solid #007bff;
+  padding-left: 15px;
+}
+
+.data-selection-info {
+  margin-bottom: 25px;
+}
+
+.info-card {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.info-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
   margin-bottom: 20px;
-  font-size: 1.2rem;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-weight: 600;
-  color: #333;
+  color: #2c3e50;
+  font-size: 1rem;
 }
 
 .form-input {
   width: 100%;
-  padding: 12px 15px;
+  padding: 14px 18px;
   border: 2px solid #e9ecef;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  background: white;
 }
 
 .form-input:focus {
   outline: none;
   border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 .form-group small {
   display: block;
-  margin-top: 5px;
+  margin-top: 8px;
   color: #6c757d;
   font-size: 0.85rem;
+  line-height: 1.4;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  margin: 30px 0;
-  flex-wrap: wrap;
-}
-
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background: #007bff;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.btn-success {
-  background: #28a745;
-  color: white;
-}
-
-.btn-success:hover {
-  background: #218838;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 15px;
-  border-radius: 8px;
-  margin: 20px 0;
-  border: 1px solid #f5c6cb;
-}
-
-.data-preview {
-  margin-top: 30px;
-}
-
-.data-preview h4 {
-  color: #495057;
-  margin-bottom: 15px;
-}
-
-.preview-table {
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
-  overflow: hidden;
-}
-
-.preview-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.preview-table th,
-.preview-table td {
-  padding: 12px 15px;
-  border: 1px solid #dee2e6;
-  text-align: left;
-}
-
-.preview-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-}
-
-.axis-x {
-  color: #007bff;
-  background: #e3f2fd !important;
-}
-
-.axis-y {
-  color: #28a745;
-  background: #e8f5e8 !important;
-}
-
-.preview-more {
-  text-align: center;
-  padding: 10px;
-  background: #f8f9fa;
-  color: #6c757d;
-  font-style: italic;
-}
 .btn-load-data {
   width: 100%;
-  margin-top: 10px;
-  padding: 15px;
+  padding: 16px;
   font-size: 1.1rem;
-}
-
-.columns-info {
-  margin-bottom: 20px;
-}
-
-.info-badge {
-  background: #007bff;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
+  margin-top: 15px;
+  border-radius: 10px;
 }
 
 .action-buttons {
   display: flex;
   gap: 15px;
-  margin: 30px 0;
+  margin: 40px 0 20px;
   flex-wrap: wrap;
 }
 
 .action-buttons .btn {
   flex: 1;
   min-width: 200px;
+  padding: 15px 25px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
+  transform: translateY(-2px);
+}
+
+.data-preview-section {
+  margin-top: 40px;
+}
+
+.data-preview-section h4 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.preview-table {
+  background: white;
+  border-radius: 10px;
+  border: 2px solid #f8f9fa;
+  overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.preview-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.preview-table th,
+.preview-table td {
+  padding: 12px 15px;
+  border: 1px solid #e9ecef;
+  text-align: left;
+}
+
+.preview-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  color: #495057;
+}
+
+.column-x {
+  background: #e3f2fd !important;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.column-y {
+  background: #e8f5e8 !important;
+  color: #28a745;
+  font-weight: 600;
+}
+
+.preview-more {
+  text-align: center;
+  padding: 15px;
+  background: #f8f9fa;
+  color: #6c757d;
+  font-style: italic;
+  border-top: 1px solid #e9ecef;
+}
+
+.error-message {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 25px 0;
+  border: 1px solid #f5c6cb;
+  border-left: 5px solid #dc3545;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .columns-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons .btn {
+    min-width: 100%;
+  }
+  
+  .config-panel {
+    padding: 20px;
+  }
 }

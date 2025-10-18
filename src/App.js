@@ -13,7 +13,10 @@ function App() {
   const [config, setConfig] = useState({
     sheetId: '',
     xAxis: '',
-    yAxis: ''
+    yAxis: '',
+    chartTitle: 'Графік даних',
+    xAxisLabel: 'Час',
+    yAxisLabel: 'Значення'
   });
 
   // Завантажуємо збережену конфігурацію при старті
@@ -22,7 +25,7 @@ function App() {
     if (savedConfig) {
       const parsedConfig = JSON.parse(savedConfig);
       setConfig(parsedConfig);
-      console.log('Завантажено збережену конфігурацію:', parsedConfig);
+      console.log('✅ Завантажено збережену конфігурацію');
     }
   }, []);
 
@@ -40,16 +43,15 @@ function App() {
     try {
       const data = await getSheetData(targetSheetId, 'AppSheetView', 'A:Z');
       setChartData(data || []);
-      console.log('Дані успішно завантажено:', data?.length, 'рядків');
+      console.log('✅ Дані успішно завантажено:', data?.length, 'рядків');
       
-      // Оновлюємо sheetId в конфігурації
       if (sheetId) {
         const newConfig = { ...config, sheetId };
         setConfig(newConfig);
       }
     } catch (err) {
-      console.error('Помилка завантаження:', err);
-      setError('❌ Помилка завантаження даних. Перевірте ID таблиці.');
+      console.error('❌ Помилка завантаження:', err);
+      setError('❌ Помилка завантаження даних. Перевірте ID таблиці та доступ.');
       setChartData([]);
     } finally {
       setLoading(false);
@@ -65,8 +67,22 @@ function App() {
       localStorage.setItem('googleSheetsConfig', JSON.stringify(config));
       alert('✅ Конфігурацію успішно збережено!');
     } else {
-      alert('⚠️ Заповніть всі поля перед збереженням');
+      alert('⚠️ Заповніть всі обов\'язкові поля перед збереженням');
     }
+  };
+
+  const handleClearConfig = () => {
+    localStorage.removeItem('googleSheetsConfig');
+    setConfig({
+      sheetId: '',
+      xAxis: '',
+      yAxis: '',
+      chartTitle: 'Графік даних',
+      xAxisLabel: 'Час',
+      yAxisLabel: 'Значення'
+    });
+    setChartData([]);
+    alert('✅ Конфігурацію очищено!');
   };
 
   const handleEnterUserMode = () => {
@@ -80,8 +96,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>📊 Google Sheets Charts</h1>
-        <p>Простий перегляд графіків з Google Tables</p>
+        <h1>📊 Data Visualizer Pro</h1>
+        <p>Професійна візуалізація даних з Google Sheets</p>
       </header>
       
       <div className="container">
@@ -93,8 +109,9 @@ function App() {
               if (savedConfig) {
                 const parsedConfig = JSON.parse(savedConfig);
                 setConfig(parsedConfig);
-                fetchData(parsedConfig.sheetId);
-                setCurrentMode('user');
+                fetchData(parsedConfig.sheetId).then(() => {
+                  setCurrentMode('user');
+                });
               } else {
                 setCurrentMode('user');
               }
@@ -113,6 +130,7 @@ function App() {
             onFetchData={fetchData}
             onEnterUserMode={handleEnterUserMode}
             onSaveConfig={handleSaveConfig}
+            onClearConfig={handleClearConfig}
           />
         )}
 
