@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine, ReferenceArea
 } from 'recharts';
 import './UserMode.css';
 
@@ -120,54 +120,113 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
   const lineType = 'monotone';
 
+  // Функція для отримання мінімального та максимального значення по Y
+  const getYAxisRange = () => {
+    if (chartData.length === 0) return { yMin: 0, yMax: 24 };
+    
+    let yMin = 0;
+    let yMax = 24; // За замовчуванням для годин
+    
+    // Якщо є дані сенсорів, використовуємо їх для визначення діапазону
+    const allValues = chartData.flatMap(point => 
+      activeSensors.map(sensor => point[sensor.column]).filter(val => val !== null)
+    );
+    
+    if (allValues.length > 0) {
+      yMin = Math.min(...allValues);
+      yMax = Math.max(...allValues);
+      
+      // Додаємо трохи місця зверху та знизу
+      const padding = (yMax - yMin) * 0.1;
+      yMin = Math.min(yMin - padding, 0);
+      yMax += padding;
+    }
+    
+    return { yMin, yMax };
+  };
+
+  const { yMin, yMax } = getYAxisRange();
+
   const renderChart = () => {
     const commonProps = {
       data: chartData,
       margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
-const CustomTooltip = ({ active, payload, label, coordinate }) => {
-  if (!active || !payload || !payload.length) return null;
+    const CustomTooltip = ({ active, payload, label, coordinate }) => {
+      if (!active || !payload || !payload.length) return null;
 
-  const tooltipStyle = {
-    position: 'absolute',
-    left: coordinate?.x,
-    top: coordinate?.y - 60, // Позиція над курсором/точкою
-    transform: 'translateX(-50%)',
-    background: '#ffffff', // Білий фон
-    color: '#1e293b',       // Темний текст
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    fontSize: '0.9rem',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-    pointerEvents: 'none',
-    whiteSpace: 'nowrap',
-    zIndex: 999
-  };
+      const tooltipStyle = {
+        position: 'absolute',
+        left: coordinate?.x,
+        top: coordinate?.y - 60,
+        transform: 'translateX(-50%)',
+        background: '#ffffff',
+        color: '#1e293b',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        fontSize: '0.9rem',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+        zIndex: 999
+      };
 
-  return (
-    <div className="custom-tooltip" style={tooltipStyle}>
-      <div style={{ fontWeight: '600', marginBottom: '6px' }}>
-        {formatTooltipDate(label)}
-      </div>
-      {payload.map((entry, i) => (
-        <div key={i}>
-          <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+      return (
+        <div className="custom-tooltip" style={tooltipStyle}>
+          <div style={{ fontWeight: '600', marginBottom: '6px' }}>
+            {formatTooltipDate(label)}
+          </div>
+          {payload.map((entry, i) => (
+            <div key={i}>
+              <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
-};
+      );
+    };
+
+    // Функція для рендеру зон
+    const renderZones = () => (
+      <>
+        {/* Червона зона: 0-6 */}
+        <ReferenceArea 
+          y1={0} 
+          y2={6} 
+          fill="#ffcccc" 
+          fillOpacity={0.3} 
+          stroke="none"
+        />
+        {/* Жовта зона: 6-18 */}
+        <ReferenceArea 
+          y1={6} 
+          y2={18} 
+          fill="#fff3cd" 
+          fillOpacity={0.3} 
+          stroke="none"
+        />
+        {/* Зелена зона: 18+ */}
+        <ReferenceArea 
+          y1={18} 
+          y2={yMax} 
+          fill="#d4edda" 
+          fillOpacity={0.3} 
+          stroke="none"
+        />
+      </>
+    );
+
     switch (chartType) {
       case 'area':
         return (
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" width={30} />
+            <YAxis stroke="#9CA3AF" width={30} domain={[yMin, yMax]} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
+            {renderZones()}
             {activeSensors.map(sensor => (
               <Area
                 key={sensor.column}
@@ -180,7 +239,6 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
                 dot={false}
               />
             ))}
-            
           </AreaChart>
         );
 
@@ -189,10 +247,10 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" width={30} />
-
+            <YAxis stroke="#9CA3AF" width={30} domain={[yMin, yMax]} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
+            {renderZones()}
             {activeSensors.map(sensor => (
               <Bar key={sensor.column} dataKey={sensor.column} fill={sensor.color} name={sensor.name} />
             ))}
@@ -204,10 +262,10 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" width={30} />
-
+            <YAxis stroke="#9CA3AF" width={30} domain={[yMin, yMax]} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
+            {renderZones()}
             {activeSensors.map(sensor => (
               <Line
                 key={sensor.column}
@@ -219,7 +277,6 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
                 name={sensor.name}
               />
             ))}
-            
             <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
           </LineChart>
         );
@@ -267,6 +324,21 @@ const CustomTooltip = ({ active, payload, label, coordinate }) => {
         <ResponsiveContainer width="100%" height={500}>
           {renderChart()}
         </ResponsiveContainer>
+      </div>
+
+      <div className="legend-zones">
+        <div className="zone-info">
+          <span className="zone-color red"></span>
+          <span>0-6: Червона зона</span>
+        </div>
+        <div className="zone-info">
+          <span className="zone-color yellow"></span>
+          <span>6-18: Жовта зона</span>
+        </div>
+        <div className="zone-info">
+          <span className="zone-color green"></span>
+          <span>18+: Зелена зона</span>
+        </div>
       </div>
 
       <div className="actions-panel">
