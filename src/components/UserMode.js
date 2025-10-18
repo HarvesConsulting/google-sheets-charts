@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  LineChart, Line,
+  LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine, ReferenceArea
+  ReferenceLine
 } from 'recharts';
 import './UserMode.css';
 
@@ -72,29 +72,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   };
 
-  const getDotColor = (value) => {
-    if (value === null || value === undefined) return '#9CA3AF';
-    if (value >= 18) return '#3b82f6';
-    if (value > 6 && value < 18) return '#eab308';
-    return '#ef4444';
-  };
-
-  const CustomizedDot = ({ cx, cy, payload, dataKey }) => {
-    const value = payload?.[dataKey];
-    if (value === null || value === undefined) return null;
-    return (
-      <circle cx={cx} cy={cy} r={4} fill={getDotColor(value)} stroke="#fff" strokeWidth={2} />
-    );
-  };
-
-  const CustomizedActiveDot = ({ cx, cy, payload, dataKey }) => {
-    const value = payload?.[dataKey];
-    if (value === null || value === undefined) return null;
-    return (
-      <circle cx={cx} cy={cy} r={6} fill={getDotColor(value)} stroke="#1f2937" strokeWidth={2} />
-    );
-  };
-
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
@@ -141,52 +118,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   }, [data, config, sensors, visibleSensors, timeRange]);
 
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
-
-  const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const tooltipStyle = {
-      position: 'absolute',
-      left: coordinate?.x,
-      top: coordinate?.y - 60,
-      transform: 'translateX(-50%)',
-      background: '#ffffff',
-      color: '#1e293b',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      padding: '10px 14px',
-      fontSize: '0.9rem',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-      pointerEvents: 'none',
-      whiteSpace: 'nowrap',
-      zIndex: 999
-    };
-
-    return (
-      <div className="custom-tooltip" style={tooltipStyle}>
-        <div style={{ fontWeight: '600', marginBottom: '6px' }}>
-          {formatTooltipDate(label)}
-        </div>
-        {payload.map((entry, i) => (
-          <div key={i}>
-            <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
-            {entry.value !== null && (
-              <span style={{ 
-                marginLeft: '8px', 
-                padding: '2px 6px', 
-                borderRadius: '4px', 
-                fontSize: '0.8rem',
-                backgroundColor: getDotColor(entry.value),
-                color: entry.value > 6 && entry.value < 18 ? '#000' : '#fff'
-              }}>
-                {entry.value >= 18 ? '≥18' : entry.value > 6 ? '6-18' : '≤6'}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
+  const lineType = 'monotone';
 
   const renderChart = () => {
     const commonProps = {
@@ -194,44 +126,104 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
-    return (
-      <LineChart {...commonProps}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-        <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" interval="preserveStartEnd" />
-        <YAxis stroke="#9CA3AF" width={30} />
+const CustomTooltip = ({ active, payload, label, coordinate }) => {
+  if (!active || !payload || !payload.length) return null;
 
-        {activeSensors.some(s => s.column === 'vol') && (
-          <>
-            <ReferenceArea y1={18} y2={1000} fill="#86efac" fillOpacity={0.2} />
-            <ReferenceArea y1={6} y2={18} fill="#fde68a" fillOpacity={0.25} />
-            <ReferenceArea y1={-1000} y2={6} fill="#fecaca" fillOpacity={0.2} />
+  const tooltipStyle = {
+    position: 'absolute',
+    left: coordinate?.x,
+    top: coordinate?.y - 60, // Позиція над курсором/точкою
+    transform: 'translateX(-50%)',
+    background: '#ffffff', // Білий фон
+    color: '#1e293b',       // Темний текст
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    fontSize: '0.9rem',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+    pointerEvents: 'none',
+    whiteSpace: 'nowrap',
+    zIndex: 999
+  };
 
-            <ReferenceLine y={18} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'НВВ (18%)', position: 'right', fill: '#22c55e', fontSize: 12 }} />
-            <ReferenceLine y={6} stroke="#ef4444" strokeDasharray="3 3" label={{ value: 'ВЗ (6%)', position: 'right', fill: '#ef4444', fontSize: 12 }} />
-          </>
-        )}
+  return (
+    <div className="custom-tooltip" style={tooltipStyle}>
+      <div style={{ fontWeight: '600', marginBottom: '6px' }}>
+        {formatTooltipDate(label)}
+      </div>
+      {payload.map((entry, i) => (
+        <div key={i}>
+          <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+        </div>
+      ))}
+    </div>
+  );
+};
+    switch (chartType) {
+      case 'area':
+        return (
+          <AreaChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" width={30} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            {activeSensors.map(sensor => (
+              <Area
+                key={sensor.column}
+                type={lineType}
+                dataKey={sensor.column}
+                stroke={sensor.color}
+                fill={sensor.color}
+                fillOpacity={0.3}
+                strokeWidth={3}
+                dot={false}
+              />
+            ))}
+            
+          </AreaChart>
+        );
 
-        <Tooltip content={<CustomTooltip />} />
-        <Legend />
+      case 'bar':
+        return (
+          <BarChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" width={30} />
 
-        {activeSensors.map(sensor => (
-          <Line
-            key={sensor.column}
-            type="linear"
-            dataKey={sensor.column}
-            stroke={sensor.color}
-            strokeWidth={3}
-            dot={(dotProps) => <CustomizedDot {...dotProps} dataKey={sensor.column} />}
-            activeDot={(dotProps) => <CustomizedActiveDot {...dotProps} dataKey={sensor.column} />}
-            connectNulls={false}
-            name={sensor.name}
-            isAnimationActive={false}
-          />
-        ))}
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            {activeSensors.map(sensor => (
+              <Bar key={sensor.column} dataKey={sensor.column} fill={sensor.color} name={sensor.name} />
+            ))}
+          </BarChart>
+        );
 
-        <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
-      </LineChart>
-    );
+      default:
+        return (
+          <LineChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" width={30} />
+
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            {activeSensors.map(sensor => (
+              <Line
+                key={sensor.column}
+                type={lineType}
+                dataKey={sensor.column}
+                stroke={sensor.color}
+                strokeWidth={3}
+                dot={false}
+                name={sensor.name}
+              />
+            ))}
+            
+            <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+          </LineChart>
+        );
+    }
   };
 
   if (!data || data.length === 0 || chartData.length === 0) {
