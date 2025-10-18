@@ -150,13 +150,13 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       left: coordinate?.x,
       top: coordinate?.y - 60,
       transform: 'translateX(-50%)',
-      background: '#1e293b',
-      color: 'white',
-      border: '1px solid #475569',
+      background: '#ffffff', // БІЛИЙ ФОН
+      color: '#000000', // ЧОРНИЙ ТЕКСТ
+      border: '1px solid #e5e7eb',
       borderRadius: '8px',
       padding: '10px 14px',
       fontSize: '0.9rem',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
       pointerEvents: 'none',
       whiteSpace: 'nowrap',
       zIndex: 999
@@ -164,12 +164,12 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
     return (
       <div className="custom-tooltip" style={tooltipStyle}>
-        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#60a5fa' }}>
+        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#1e293b' }}>
           {formatTooltipDate(label)}
         </div>
         {payload.map((entry, i) => (
-          <div key={i} style={{ color: entry.color || '#3b82f6' }}>
-            <strong>{entry.name}:</strong> {entry.value}
+          <div key={i} style={{ color: '#1e293b' }}>
+            <strong style={{ color: entry.color || '#3b82f6' }}>{entry.name}:</strong> {entry.value}
           </div>
         ))}
       </div>
@@ -229,17 +229,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     <div className="user-mode">
       <header className="user-header">
         <div className="header-content">
-          <h1>📊 Аналіз даних</h1>
-          <div className="header-stats">
-            <div className="stat-badge">
-              <span className="stat-icon">📈</span>
-              <span>{activeSensors.length} сенсорів</span>
-            </div>
-            <div className="stat-badge">
-              <span className="stat-icon">🕒</span>
-              <span>{chartData.length} точок</span>
-            </div>
-          </div>
+          <h1>📊 Графік даних</h1>
         </div>
       </header>
 
@@ -307,7 +297,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                   key={sensor.column}
                   type={lineType}
                   dataKey={sensor.column}
-                  stroke="#3b82f6" // Синя лінія
+                  stroke={sensor.color || '#3b82f6'}
                   strokeWidth={3}
                   dot={false}
                   name={sensor.name}
@@ -316,21 +306,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-
-        <div className="legend-zones">
-          <div className="zone-info">
-            <span className="zone-color red"></span>
-            <span>0-6: Червона зона</span>
-          </div>
-          <div className="zone-info">
-            <span className="zone-color yellow"></span>
-            <span>6-18: Жовта зона</span>
-          </div>
-          <div className="zone-info">
-            <span className="zone-color green"></span>
-            <span>18+: Зелена зона</span>
-          </div>
         </div>
       </div>
 
@@ -350,7 +325,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             const avg = sensorData.reduce((a, b) => a + b, 0) / sensorData.length;
 
             return (
-              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: '#3b82f6' }}>
+              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: sensor.color || '#3b82f6' }}>
                 <div className="stat-header">
                   <h4>{sensor.name}</h4>
                   <div className="data-points">{sensorData.length} точок</div>
