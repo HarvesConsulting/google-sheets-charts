@@ -73,20 +73,22 @@ const parseGoogleSheetsData = (data) => {
   return result;
 };
 
-// Функція для отримання списку доступних колонок
+// Функція для отримання списку доступних колонок - ВИПРАВЛЕНА ВЕРСІЯ
 export const getAvailableColumns = (data) => {
   if (!data || data.length === 0) return [];
   
   const columns = Object.keys(data[0]);
-  // Виключаємо типові колонки з датами
-  const excludeColumns = ['ДатаЧас', 'Date', 'Timestamp', 'date', 'timestamp'];
-  const dataColumns = columns.filter(col => 
-    !excludeColumns.includes(col) && 
+  console.log('Всі колонки з даних:', columns);
+  
+  // Фільтруємо тільки порожні та undefined значення
+  const availableColumns = columns.filter(col => 
     col !== '' && 
-    col !== undefined
+    col !== undefined &&
+    col !== null
   );
   
-  return dataColumns;
+  console.log('Доступні колонки після фільтрації:', availableColumns);
+  return availableColumns;
 };
 
 // Функція для фільтрації та очищення даних для конкретного датчика

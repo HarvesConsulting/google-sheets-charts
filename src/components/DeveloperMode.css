@@ -230,3 +230,116 @@
     padding: 20px;
   }
 }
+/* Додайте ці стилі в кінець файлу DeveloperMode.css */
+
+.columns-preview {
+  margin: 20px 0;
+}
+
+.columns-preview h4 {
+  margin-bottom: 10px;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.columns-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.column-tag {
+  background: #f8f9fa;
+  color: #495057;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  border: 2px solid #e9ecef;
+  font-family: 'Courier New', monospace;
+  transition: all 0.3s ease;
+}
+
+.column-tag-x {
+  background: #007bff !important;
+  color: white !important;
+  border-color: #0056b3 !important;
+  font-weight: 600;
+}
+
+.column-tag-y {
+  background: #28a745 !important;
+  color: white !important;
+  border-color: #1e7e34 !important;
+  font-weight: 600;
+}
+
+.selection-hint {
+  background: #e8f4fd;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #007bff;
+  margin-top: 20px;
+}
+
+.selection-hint h4 {
+  color: #007bff;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.selection-hint ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.selection-hint li {
+  margin-bottom: 8px;
+  color: #495057;
+  line-height: 1.4;
+}
+
+.preview-info {
+  margin-bottom: 15px;
+}
+
+.preview-info p {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Покращення для таблиці */
+.preview-table {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.preview-table th.column-x,
+.preview-table td.column-x {
+  background: #e3f2fd;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.preview-table th.column-y,
+.preview-table td.column-y {
+  background: #e8f5e8;
+  color: #28a745;
+  font-weight: 600;
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+  .columns-tags {
+    justify-content: center;
+  }
+  
+  .column-tag {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+  
+  .selection-hint {
+    padding: 15px;
+  }
+}

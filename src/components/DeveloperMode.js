@@ -20,6 +20,7 @@ const DeveloperMode = ({
     if (data && data.length > 0) {
       const columns = getAvailableColumns(data);
       setAvailableColumns(columns);
+      console.log('📊 Доступні колонки для вибору:', columns);
     }
   }, [data]);
 
@@ -94,6 +95,27 @@ const DeveloperMode = ({
                     <span className="info-badge">📋 Завантажено рядків: {data.length}</span>
                     <span className="info-badge">📊 Доступно колонок: {availableColumns.length}</span>
                   </div>
+                  
+                  {availableColumns.length > 0 && (
+                    <div className="columns-preview">
+                      <h4>Доступні колонки:</h4>
+                      <div className="columns-tags">
+                        {availableColumns.map(col => (
+                          <span 
+                            key={col} 
+                            className={`column-tag ${
+                              col === localConfig.xAxis ? 'column-tag-x' : 
+                              col === localConfig.yAxis ? 'column-tag-y' : ''
+                            }`}
+                          >
+                            {col}
+                            {col === localConfig.xAxis && ' (X)'}
+                            {col === localConfig.yAxis && ' (Y)'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="columns-grid">
@@ -153,6 +175,16 @@ const DeveloperMode = ({
                     <small>Підпис для вертикальної осі</small>
                   </div>
                 </div>
+
+                {/* Підказка по вибору осей */}
+                <div className="selection-hint">
+                  <h4>💡 Порада щодо вибору осей:</h4>
+                  <ul>
+                    <li><strong>Вісь X (горизонтальна):</strong> виберіть колонку з датами, часом або категориями</li>
+                    <li><strong>Вісь Y (вертикальна):</strong> виберіть колонку з числовими значеннями для відображення</li>
+                    <li><strong>Приклад:</strong> X = "ДатаЧас", Y = "Шпалера"</li>
+                  </ul>
+                </div>
               </div>
             )}
 
@@ -198,6 +230,9 @@ const DeveloperMode = ({
           {hasData && (
             <div className="data-preview-section">
               <h4>👀 Попередній перегляд даних</h4>
+              <div className="preview-info">
+                <p>Відображаються перші 8 рядків з {data.length} завантажених</p>
+              </div>
               <div className="preview-table">
                 <table>
                   <thead>
@@ -228,7 +263,7 @@ const DeveloperMode = ({
                               col === localConfig.yAxis ? 'column-y' : ''
                             }
                           >
-                            {row[col]}
+                            {row[col] || '-'}
                           </td>
                         ))}
                       </tr>
