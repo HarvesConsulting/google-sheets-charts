@@ -24,34 +24,41 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   // Функція для конвертації дати з рядка в timestamp
   const parseDate = (dateString) => {
-    if (!dateString) return null;
-    
-    try {
-      // Спроба розпарсити формат "dd.mm.yyyy hh:mm:ss"
-      const parts = dateString.toString().split(' ');
-      if (parts.length >= 2) {
-        const dateParts = parts[0].split('.');
-        const timeParts = parts[1].split(':');
-        
-        if (dateParts.length === 3 && timeParts.length >= 2) {
-          const day = parseInt(dateParts[0], 10);
-          const month = parseInt(dateParts[1], 10) - 1; // Місяці з 0 до 11
-          const year = parseInt(dateParts[2], 10);
-          const hours = parseInt(timeParts[0], 10);
-          const minutes = parseInt(timeParts[1], 10);
-          const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
-          
-          return new Date(year, month, day, hours, minutes, seconds).getTime();
-        }
-      }
-      
-      // Спроба стандартного парсингу
-      const parsed = new Date(dateString);
-      return isNaN(parsed.getTime()) ? null : parsed.getTime();
-    } catch {
-      return null;
+  if (!dateString) return null;
+
+  try {
+    // Обробка специфічного формату: Date(2025,8,2,16,34,37)
+    const dateMatch = /Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/.exec(dateString);
+    if (dateMatch) {
+      const [, year, month, day, hour, minute, second] = dateMatch.map(Number);
+      return new Date(year, month, day, hour, minute, second).getTime();
     }
-  };
+
+    // Спроба розпарсити "dd.mm.yyyy hh:mm:ss"
+    const parts = dateString.toString().split(' ');
+    if (parts.length >= 2) {
+      const dateParts = parts[0].split('.');
+      const timeParts = parts[1].split(':');
+
+      if (dateParts.length === 3 && timeParts.length >= 2) {
+        const day = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10) - 1;
+        const year = parseInt(dateParts[2], 10);
+        const hours = parseInt(timeParts[0], 10);
+        const minutes = parseInt(timeParts[1], 10);
+        const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+
+        return new Date(year, month, day, hours, minutes, seconds).getTime();
+      }
+    }
+
+    // Фолбек на стандартний new Date()
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime()) ? null : parsed.getTime();
+  } catch {
+    return null;
+  }
+};
 
   // Підготовка даних для графіка - ВИПРАВЛЕНА ВЕРСІЯ
   const chartData = useMemo(() => {
