@@ -153,7 +153,7 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 0px 10px; /* Змінити з 15px 10px на 0px 10px */
+  padding: 15px 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   margin: 20px auto;
   max-width: 98%;
@@ -465,4 +465,45 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+/* ФІКС ВІДСТУПІВ ГРАФІКА */
+.recharts-wrapper {
+  overflow: visible !important;
+}
+
+.recharts-surface {
+  overflow: visible !important;
+}
+
+.recharts-cartesian-grid {
+  height: 100% !important;
+}
+
+/* Прибрати відступи в контейнері графіка */
+.chart-container .recharts-responsive-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Примусово розтягнути графік */
+.recharts-cartesian-grid-horizontal line:first-child,
+.recharts-cartesian-grid-horizontal line:last-child {
+  stroke: transparent;
+}
+
+/* Виправити позицію графіка */
+.recharts-layer {
+  transform: translateY(0px) !important;
+}
+
+/* Зменшити вертикальний padding для chart-container */
+.chart-container {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 5px 10px !important; /* Зменшено вертикальний padding */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  margin: 20px auto;
+  max-width: 98%;
+  touch-action: pan-y;
 }
