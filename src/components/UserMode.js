@@ -146,7 +146,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip {...tooltipProps} />
             <Legend />
             {activeSensors.map(sensor => (
@@ -170,7 +170,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" width={30} />
+
             <Tooltip {...tooltipProps} />
             <Legend />
             {activeSensors.map(sensor => (
@@ -184,7 +185,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" width={30} />
+
             <Tooltip {...tooltipProps} />
             <Legend />
             {activeSensors.map(sensor => (
