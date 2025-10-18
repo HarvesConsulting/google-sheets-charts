@@ -110,8 +110,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>📊 Data Visualizer Pro</h1>
-        <p>Професійна візуалізація даних з Google Sheets</p>
+        <h1>РОЗУМНИЙ ПОЛИВ</h1>
+        <p>від HarvestConsulting</p>
       </header>
       
       <div className="container">

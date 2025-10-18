@@ -4,9 +4,7 @@ import './StartScreen.css';
 const StartScreen = ({ onDeveloperMode, onUserMode, hasSavedConfig }) => {
   return (
     <div className="start-screen">
-      <div className="app-header">
-        <h1>🌱 Розумний полив</h1>
-      </div>
+      
       
       <div className="mode-buttons">
         <button onClick={onDeveloperMode} className="btn btn-primary">
@@ -18,9 +16,7 @@ const StartScreen = ({ onDeveloperMode, onUserMode, hasSavedConfig }) => {
         </button>
       </div>
 
-      <div className="footer">
-        <p>HarvestConsulting</p>
-      </div>
+      
     </div>
   );
 };
