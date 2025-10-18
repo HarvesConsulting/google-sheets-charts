@@ -1,108 +1,28 @@
 .start-screen {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Фіолетово-синій градієнт */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   padding: 20px;
-  color: #0c4a6e; /* Темно-синій текст */
-}
-
-.app-header {
-  text-align: center;
-  margin-bottom: 60px;
+  color: white; /* Білий текст для контрасту */
 }
 
 .app-header h1 {
   font-size: 3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%); /* Синій градієнт для тексту */
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%); /* Білий градієнт для тексту */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
 }
 
-.mode-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-  margin-bottom: 60px;
-}
-
-.btn {
-  padding: 16px 32px;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 250px;
-  justify-content: center;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); /* Голубий градієнт */
-  color: white;
-  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6);
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%); /* Світліший голубий */
-  color: white;
-  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
-}
-
-.btn-secondary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6);
-}
-
 .footer {
   position: absolute;
   bottom: 20px;
   text-align: center;
-  color: #475569; /* Сірий текст */
+  color: #cbd5e1; /* Світло-сірий для футера */
   font-size: 0.9rem;
-}
-
-.footer p {
-  margin: 0;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .app-header h1 {
-    font-size: 2.5rem;
-  }
-  
-  .btn {
-    min-width: 200px;
-    font-size: 1.1rem;
-    padding: 14px 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-header h1 {
-    font-size: 2rem;
-  }
-  
-  .btn {
-    min-width: 180px;
-    font-size: 1rem;
-    padding: 12px 24px;
-  }
 }
