@@ -13,7 +13,7 @@ function App() {
   const [refreshInterval, setRefreshInterval] = useState(300000);
   const [isDeveloperMode, setIsDeveloperMode] = useState(true);
   const [sensors, setSensors] = useState([
-    { name: 'Шпалера', column: 'Шпалера', color: '#0088FE', visible: true }
+    { name: 'Шпалера', column: 'Шпалера', color: '#0088FE', visible: true, type: 'line' }
   ]);
   
   const [config, setConfig] = useState({
@@ -26,6 +26,7 @@ function App() {
   const fetchData = useCallback(async () => {
     if (!config.sheetId) {
       setError('⚠️ Будь ласка, введіть ID таблиці');
+      setChartData([]);
       return;
     }
 
@@ -34,23 +35,29 @@ function App() {
     
     try {
       const data = await getSheetData(config.sheetId, config.sheetName, config.range);
-      setChartData(data);
+      setChartData(data || []);
       setLastUpdate(new Date());
       console.log('Дані успішно завантажено:', data);
     } catch (err) {
+      console.error('Помилка завантаження:', err);
       setError('❌ Помилка завантаження даних. Перевірте ID таблиці та налаштування.');
-      console.error('Помилка:', err);
+      setChartData([]);
     } finally {
       setLoading(false);
     }
   }, [config.sheetId, config.sheetName, config.range]);
 
+  // Завантажуємо дані при зміні ID таблиці
   useEffect(() => {
     if (config.sheetId) {
       fetchData();
+    } else {
+      setChartData([]);
+      setError('⚠️ Будь ласка, введіть ID таблиці');
     }
   }, [config.sheetId, fetchData]);
 
+  // Автооновлення
   useEffect(() => {
     let intervalId;
 
@@ -70,6 +77,7 @@ function App() {
 
   const handleConfigUpdate = (newConfig) => {
     setConfig(newConfig);
+    // Не завантажуємо дані автоматично - користувач сам натисне "Оновити"
   };
 
   const handleSensorsUpdate = (newSensors) => {
@@ -93,6 +101,11 @@ function App() {
     return lastUpdate.toLocaleTimeString('uk-UA');
   };
 
+  // Функція для скидання помилки
+  const clearError = () => {
+    setError('');
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -110,70 +123,105 @@ function App() {
       </header>
       
       <div className="container">
-        {loading && (
-          <div className="loading">
-            <div className="spinner"></div>
-            Завантаження даних...
-          </div>
-        )}
-        
-        {error && <div className="error">{error}</div>}
-        
-        {!loading && !error && (
+        {isDeveloperMode ? (
+          // РЕЖИМ РОЗРОБНИКА - завжди доступний
           <>
-            {isDeveloperMode ? (
-              // Режим розробника
-              <>
-                <DeveloperPanel 
-                  config={config}
-                  onConfigUpdate={handleConfigUpdate}
-                  data={chartData}
-                  onRefresh={fetchData}
-                  sensors={sensors}
-                  onSensorsUpdate={handleSensorsUpdate}
-                />
+            {error && (
+              <div className="error-with-retry">
+                <div className="error-message">{error}</div>
+                <button onClick={clearError} className="btn btn-secondary btn-small">
+                  ✖️ Сховати помилку
+                </button>
+                <button onClick={fetchData} className="btn btn-primary btn-small">
+                  🔄 Спробувати знову
+                </button>
+              </div>
+            )}
+            
+            <DeveloperPanel 
+              config={config}
+              onConfigUpdate={handleConfigUpdate}
+              data={chartData}
+              onRefresh={fetchData}
+              sensors={sensors}
+              onSensorsUpdate={handleSensorsUpdate}
+            />
+            
+            <div className="auto-refresh-panel">
+              <h3>🔄 Автооновлення</h3>
+              <div className="refresh-controls">
+                <button 
+                  className={`btn ${autoRefresh ? 'btn-active' : 'btn-inactive'}`}
+                  onClick={toggleAutoRefresh}
+                  disabled={!config.sheetId}
+                >
+                  {autoRefresh ? '⏸️ Призупинити' : '▶️ Увімкнути'} автооновлення
+                </button>
                 
-                <div className="auto-refresh-panel">
-                  <h3>🔄 Автооновлення</h3>
-                  <div className="refresh-controls">
-                    <button 
-                      className={`btn ${autoRefresh ? 'btn-active' : 'btn-inactive'}`}
-                      onClick={toggleAutoRefresh}
-                    >
-                      {autoRefresh ? '⏸️ Призупинити' : '▶️ Увімкнути'} автооновлення
-                    </button>
-                    
-                    <div className="interval-controls">
-                      <label>Інтервал:</label>
-                      <select 
-                        value={refreshInterval / 60000} 
-                        onChange={(e) => handleIntervalChange(Number(e.target.value))}
-                        disabled={!autoRefresh}
-                      >
-                        <option value={1}>1 хвилина</option>
-                        <option value={2}>2 хвилини</option>
-                        <option value={5}>5 хвилин</option>
-                        <option value={10}>10 хвилин</option>
-                        <option value={15}>15 хвилин</option>
-                      </select>
-                    </div>
-                    
-                    <div className="last-update">
-                      ⏰ Останнє оновлення: {formatLastUpdate()}
-                    </div>
-                  </div>
+                <div className="interval-controls">
+                  <label>Інтервал:</label>
+                  <select 
+                    value={refreshInterval / 60000} 
+                    onChange={(e) => handleIntervalChange(Number(e.target.value))}
+                    disabled={!autoRefresh || !config.sheetId}
+                  >
+                    <option value={1}>1 хвилина</option>
+                    <option value={2}>2 хвилини</option>
+                    <option value={5}>5 хвилин</option>
+                    <option value={10}>10 хвилин</option>
+                    <option value={15}>15 хвилин</option>
+                  </select>
                 </div>
-              </>
-            ) : (
-              // Режим користувача
+                
+                <div className="last-update">
+                  ⏰ Останнє оновлення: {formatLastUpdate()}
+                </div>
+              </div>
+            </div>
+
+            {loading && (
+              <div className="loading">
+                <div className="spinner"></div>
+                Завантаження даних...
+              </div>
+            )}
+          </>
+        ) : (
+          // РЕЖИМ КОРИСТУВАЧА - тільки якщо є дані
+          <>
+            {error && (
+              <div className="error">
+                {error}
+                <button onClick={toggleDeveloperMode} className="btn btn-primary btn-small">
+                  ⚙️ Перейти до налаштувань
+                </button>
+              </div>
+            )}
+            
+            {loading && (
+              <div className="loading">
+                <div className="spinner"></div>
+                Завантаження даних...
+              </div>
+            )}
+
+            {!loading && !error && chartData.length > 0 ? (
               <UserView 
                 data={chartData}
                 config={config}
                 sensors={sensors.filter(sensor => sensor.visible)}
-                loading={loading}
-                error={error}
                 lastUpdate={lastUpdate}
               />
+            ) : (
+              !loading && !error && (
+                <div className="no-data-user">
+                  <h3>📊 Немає даних для відображення</h3>
+                  <p>Перейдіть в режим розробника для налаштування підключення</p>
+                  <button onClick={toggleDeveloperMode} className="btn btn-primary">
+                    👨‍💻 Перейти до налаштувань
+                  </button>
+                </div>
+              )
             )}
           </>
         )}
