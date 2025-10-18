@@ -10,10 +10,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const [visibleSensors, setVisibleSensors] = useState({});
   const [chartType, setChartType] = useState('line');
   const [timeRange, setTimeRange] = useState('all');
-  const [showGrid] = useState(true);
-  const [smoothLines] = useState(true);
 
-  // --- ініціалізація видимості датчиків ---
   useEffect(() => {
     const initialVisibility = {};
     sensors.forEach(sensor => {
@@ -22,19 +19,15 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     setVisibleSensors(initialVisibility);
   }, [sensors]);
 
-  // --- універсальний парсер дати ---
   const parseDate = (dateString) => {
     if (!dateString) return null;
-
     try {
-      // Формат Google Sheets: Date(2025,8,2,16,34,37)
       const match = /Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/.exec(dateString);
       if (match) {
         const [, year, month, day, hour, minute, second] = match.map(Number);
         return new Date(year, month, day, hour, minute, second).getTime();
       }
 
-      // Формат dd.mm.yyyy hh:mm:ss
       const parts = dateString.toString().split(' ');
       if (parts.length >= 2) {
         const dateParts = parts[0].split('.');
@@ -50,16 +43,13 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         }
       }
 
-      // fallback стандартного парсингу
       const parsed = new Date(dateString);
       return isNaN(parsed.getTime()) ? null : parsed.getTime();
-    } catch (err) {
-      console.warn('Помилка парсингу дати:', dateString, err);
+    } catch {
       return null;
     }
   };
 
-  // --- форматування дати для осі ---
   const formatDateForDisplay = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString('uk-UA', {
@@ -82,17 +72,12 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   };
 
-  // --- формування даних для графіка ---
   const chartData = useMemo(() => {
-    if (!data || data.length === 0) {
-      console.warn('❌ Немає даних для побудови графіка');
-      return [];
-    }
+    if (!data || data.length === 0) return [];
 
     let processedData = data.map((row) => {
       const rawDate = row[config.xAxis];
       const timestamp = parseDate(rawDate);
-
       if (!timestamp) return null;
 
       const dataPoint = {
@@ -129,48 +114,11 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       }
     }
 
-    console.log('✅ chartData готовий:', processedData.slice(0, 3));
     return processedData;
   }, [data, config, sensors, visibleSensors, timeRange]);
 
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
-
-    // --- обробка відсутності даних ---
-  if (!data || data.length === 0) {
-    return (
-      <div className="user-mode">
-        <div className="no-data">
-          <div className="no-data-icon">📊</div>
-          <h2>Немає даних для відображення</h2>
-          <button onClick={onBackToDeveloper} className="btn btn-primary">
-            ⚙️ Перейти до налаштувань
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (chartData.length === 0) {
-    return (
-      <div className="user-mode">
-        <div className="no-data">
-          <div className="no-data-icon">⚠️</div>
-          <h2>Не вдалося підготувати дані для графіка</h2>
-          <p>Перевірте:
-            <ul style={{ textAlign: 'left', display: 'inline-block', color: '#cbd5e1' }}>
-              <li>Чи правильно обрана вісь X (колонка з датами)</li>
-              <li>Чи додані датчики для осі Y</li>
-              <li>Чи формат дат відповідає "dd.mm.yyyy hh:mm:ss" або "Date(...)"</li>
-            </ul>
-          </p>
-          <button onClick={onBackToDeveloper} className="btn btn-primary">⚙️ Налаштування</button>
-        </div>
-      </div>
-    );
-  }
-
-  // --- вибір типу графіка ---
-  const lineType = smoothLines ? 'monotone' : 'linear';
+  const lineType = 'monotone';
 
   const renderChart = () => {
     const commonProps = {
@@ -178,7 +126,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       margin: { top: 20, right: 30, left: 20, bottom: 20 }
     };
 
-    const commonTooltip = {
+    const tooltipProps = {
       formatter: (value, name) => {
         const sensor = sensors.find(s => s.column === name);
         return [value, sensor ? sensor.name : name];
@@ -199,7 +147,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" />
-            <Tooltip {...commonTooltip} />
+            <Tooltip {...tooltipProps} />
             <Legend />
             {activeSensors.map(sensor => (
               <Area
@@ -210,7 +158,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 fill={sensor.color}
                 fillOpacity={0.3}
                 strokeWidth={3}
-                name={sensor.name}
                 dot={false}
               />
             ))}
@@ -224,7 +171,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" />
-            <Tooltip {...commonTooltip} />
+            <Tooltip {...tooltipProps} />
             <Legend />
             {activeSensors.map(sensor => (
               <Bar key={sensor.column} dataKey={sensor.column} fill={sensor.color} name={sensor.name} />
@@ -235,10 +182,10 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       default:
         return (
           <LineChart {...commonProps}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={showGrid ? 0.3 : 0} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" />
-            <Tooltip {...commonTooltip} />
+            <Tooltip {...tooltipProps} />
             <Legend />
             {activeSensors.map(sensor => (
               <Line
@@ -258,6 +205,19 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     }
   };
 
+  if (!data || data.length === 0 || chartData.length === 0) {
+    return (
+      <div className="user-mode">
+        <div className="no-data">
+          <h2>📭 Немає даних для побудови графіка</h2>
+          <button onClick={onBackToDeveloper} className="btn btn-primary">
+            🔧 Повернутись до налаштувань
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="user-mode">
       <div className="controls-panel">
@@ -269,25 +229,32 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <option value="bar">📊 Стовпчики</option>
           </select>
         </div>
+
         <div className="controls-group">
           <label>Період:</label>
           <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
-            <option value="1h">1 година</option>
+            <option value="1h">Остання година</option>
             <option value="6h">6 годин</option>
             <option value="24h">24 години</option>
             <option value="7d">7 днів</option>
-            <option value="all">Весь період</option>
+            <option value="all">Весь час</option>
           </select>
         </div>
       </div>
 
-      <div className="chart-section">
+      <div className="chart-container">
         <ResponsiveContainer width="100%" height={500}>
           {renderChart()}
         </ResponsiveContainer>
+      </div>
+
+      <div className="actions-panel">
+        <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
+        <button onClick={onBackToDeveloper} className="btn btn-primary">⚙️ Налаштування</button>
       </div>
     </div>
   );
 };
 
 export default UserMode;
+
