@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -9,7 +9,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
 
   // Ініціалізація видимості датчиків
-  useState(() => {
+  React.useEffect(() => {
     const initialVisibility = {};
     sensors.forEach(sensor => {
       initialVisibility[sensor.name] = sensor.visible !== false;
@@ -18,7 +18,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
   }, [sensors]);
 
   // Функція для конвертації дати з рядка в об'єкт Date
-  const parseDate = (dateString) => {
+  const parseDate = useCallback((dateString) => {
     if (!dateString) return new Date();
     
     // Спроба розпарсити формат "dd.mm.yyyy hh:mm:ss"
@@ -42,10 +42,10 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
     // Спроба стандартного парсингу
     const parsed = new Date(dateString);
     return isNaN(parsed.getTime()) ? new Date() : parsed;
-  };
+  }, []);
 
   // Функція для форматування дати для відображення
-  const formatDateForDisplay = (date) => {
+  const formatDateForDisplay = useCallback((date) => {
     if (!date) return '';
     
     const dateObj = typeof date === 'string' ? parseDate(date) : date;
@@ -57,7 +57,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
     const minutes = dateObj.getMinutes().toString().padStart(2, '0');
     
     return `${day}.${month} ${hours}:${minutes}`;
-  };
+  }, [parseDate]);
 
   // Підготовка даних для графіків
   const chartData = useMemo(() => {
@@ -82,10 +82,10 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
     
     // Сортуємо за датою
     return preparedData.sort((a, b) => a.timestamp - b.timestamp);
-  }, [data, config.dateColumn, sensors, visibleSensors]);
+  }, [data, config.dateColumn, sensors, visibleSensors, parseDate, formatDateForDisplay]);
 
   // Кастомний компонент для підписів на осі X
-  const CustomXAxisTick = ({ x, y, payload }) => {
+  const CustomXAxisTick = useCallback(({ x, y, payload }) => {
     return (
       <g transform={`translate(${x},${y})`}>
         <text 
@@ -100,10 +100,10 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
         </text>
       </g>
     );
-  };
+  }, [formatDateForDisplay]);
 
   // Кастомний тултіп
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = useCallback(({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="custom-tooltip">
@@ -117,7 +117,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
       );
     }
     return null;
-  };
+  }, [formatDateForDisplay]);
 
   const toggleSensorVisibility = (sensorName) => {
     setVisibleSensors(prev => ({
@@ -142,7 +142,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
 
     const commonProps = {
       data: chartData,
-      margin: { top: 20, right: 30, left: 20, bottom: 40 } // Збільшили bottom для місця під підписи
+      margin: { top: 20, right: 30, left: 20, bottom: 40 }
     };
 
     const activeSensors = sensors.filter(sensor => visibleSensors[sensor.name] !== false);
