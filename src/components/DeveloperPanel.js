@@ -12,7 +12,7 @@ const DeveloperPanel = ({
 }) => {
   const [localConfig, setLocalConfig] = useState(config);
   const [availableColumns, setAvailableColumns] = useState([]);
-  const [localSensors, setLocalSensors] = useState(sensors);
+  const [localSensors, setLocalSensors] = useState(sensors || []);
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -63,18 +63,16 @@ const DeveloperPanel = ({
         <div className="config-section">
           <h3 className="section-title">📋 Налаштування таблиці</h3>
           
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">🔑 ID таблиці:</label>
-              <input
-                type="text"
-                value={localConfig.sheetId}
-                onChange={(e) => handleConfigChange('sheetId', e.target.value)}
-                placeholder="Введіть ID з URL Google Sheets"
-                className="form-input"
-              />
-              <div className="form-hint">ID знаходиться між /d/ та /edit в URL</div>
-            </div>
+          <div className="form-group">
+            <label className="form-label">🔑 ID таблиці:</label>
+            <input
+              type="text"
+              value={localConfig.sheetId || ''}
+              onChange={(e) => handleConfigChange('sheetId', e.target.value)}
+              placeholder="Введіть ID з URL Google Sheets"
+              className="form-input"
+            />
+            <div className="form-hint">ID знаходиться між /d/ та /edit в URL</div>
           </div>
 
           <div className="form-row">
@@ -82,7 +80,7 @@ const DeveloperPanel = ({
               <label className="form-label">📊 Назва листа:</label>
               <input
                 type="text"
-                value={localConfig.sheetName}
+                value={localConfig.sheetName || ''}
                 onChange={(e) => handleConfigChange('sheetName', e.target.value)}
                 placeholder="AppSheetView"
                 className="form-input"
@@ -92,7 +90,7 @@ const DeveloperPanel = ({
             <div className="form-group">
               <label className="form-label">📅 Колонка з датою:</label>
               <select
-                value={localConfig.dateColumn}
+                value={localConfig.dateColumn || 'ДатаЧас'}
                 onChange={(e) => handleConfigChange('dateColumn', e.target.value)}
                 className="form-input"
               >
@@ -132,7 +130,7 @@ const DeveloperPanel = ({
                     <label className="form-label">Назва датчика:</label>
                     <input
                       type="text"
-                      value={sensor.name}
+                      value={sensor.name || ''}
                       onChange={(e) => handleSensorChange(index, 'name', e.target.value)}
                       placeholder="Наприклад: Температура"
                       className="form-input"
@@ -142,7 +140,7 @@ const DeveloperPanel = ({
                   <div className="form-group">
                     <label className="form-label">Колонка в таблиці:</label>
                     <select
-                      value={sensor.column}
+                      value={sensor.column || ''}
                       onChange={(e) => handleSensorChange(index, 'column', e.target.value)}
                       className="form-input"
                     >
@@ -158,7 +156,7 @@ const DeveloperPanel = ({
                     <div className="color-input-group">
                       <input
                         type="color"
-                        value={sensor.color}
+                        value={sensor.color || '#0088FE'}
                         onChange={(e) => handleSensorChange(index, 'color', e.target.value)}
                         className="color-input"
                       />
@@ -170,7 +168,7 @@ const DeveloperPanel = ({
                     <label className="checkbox-label">
                       <input
                         type="checkbox"
-                        checked={sensor.visible}
+                        checked={sensor.visible !== false}
                         onChange={(e) => handleSensorChange(index, 'visible', e.target.checked)}
                         className="checkbox-input"
                       />
