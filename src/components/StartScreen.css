@@ -1,28 +1,124 @@
 .start-screen {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Фіолетово-синій градієнт */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   padding: 20px;
-  color: white; /* Білий текст для контрасту */
+  color: white;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 60px;
+  margin-top: 60px;
 }
 
 .app-header h1 {
   font-size: 3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%); /* Білий градієнт для тексту */
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
 }
 
+.mode-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+/* КВАДРАТНІ КНОПКИ */
+.btn {
+  padding: 0; /* Прибираємо padding */
+  border: none;
+  border-radius: 8px; /* Мінімальне закруглення */
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 150px; /* Фіксована ширина */
+  height: 150px; /* Фіксована висота - робить квадрат */
+  text-align: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+  border: 2px solid #0ea5e9;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+  border: 2px solid #38bdf8;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6);
+}
+
 .footer {
   position: absolute;
   bottom: 20px;
   text-align: center;
-  color: #cbd5e1; /* Світло-сірий для футера */
+  color: #cbd5e1;
   font-size: 0.9rem;
+}
+
+.footer p {
+  margin: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .app-header {
+    margin-top: 40px;
+    margin-bottom: 40px;
+  }
+  
+  .btn {
+    width: 140px;
+    height: 140px;
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 2rem;
+  }
+  
+  .app-header {
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .btn {
+    width: 130px;
+    height: 130px;
+    font-size: 1.2rem;
+  }
 }
