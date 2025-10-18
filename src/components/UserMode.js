@@ -211,27 +211,26 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       </button>
 
       <div className="sensor-controls-panel">
-  <h3>🖲️ Відображення сенсорів</h3>
-  <div className="sensors-toggle">
-    {sensors.map(sensor => (
-      <label key={sensor.column} className="checkbox-label">
-        <input
-          type="checkbox"
-          checked={visibleSensors[sensor.column] !== false}
-          onChange={(e) => setVisibleSensors(prev => ({
-            ...prev,
-            [sensor.column]: e.target.checked
-          }))}
-        />
-        <span 
-          className="sensor-color" 
-          style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-        ></span>
-        <span className="sensor-name">{sensor.name}</span>
-      </label>
-    ))}
-  </div>
-        
+        <h3>🖲️ Відображення сенсорів</h3>
+        <div className="sensors-toggle">
+          {sensors.map(sensor => (
+            <label key={sensor.column} className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={visibleSensors[sensor.column] !== false}
+                onChange={(e) => setVisibleSensors(prev => ({
+                  ...prev,
+                  [sensor.column]: e.target.checked
+                }))}
+              />
+              <span 
+                className="sensor-color" 
+                style={{ backgroundColor: sensor.color || '#1e3a8a' }}
+              ></span>
+              <span className="sensor-name">{sensor.name}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="chart-section">
