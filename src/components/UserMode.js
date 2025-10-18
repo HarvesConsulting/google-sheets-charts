@@ -10,8 +10,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const [visibleSensors, setVisibleSensors] = useState({});
   const [chartType, setChartType] = useState('line');
   const [timeRange, setTimeRange] = useState('all');
-  const [showGrid, setShowGrid] = useState(true);
-  const [smoothLines, setSmoothLines] = useState(true);
+  const [showGrid] = useState(true);
+  const [smoothLines] = useState(true);
 
   // --- ініціалізація видимості датчиків ---
   useEffect(() => {
@@ -133,31 +133,9 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     return processedData;
   }, [data, config, sensors, visibleSensors, timeRange]);
 
-  const toggleSensorVisibility = (sensorColumn) => {
-    setVisibleSensors(prev => ({
-      ...prev,
-      [sensorColumn]: !prev[sensorColumn]
-    }));
-  };
-
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
 
-  // --- статистика ---
-  const statistics = useMemo(() => {
-    return activeSensors.map(sensor => {
-      const values = chartData.map(d => d[sensor.column]).filter(v => v !== null);
-      if (values.length === 0) {
-        return { sensor, min: 0, max: 0, avg: 0, current: 0, dataPoints: 0 };
-      }
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const current = values[values.length - 1];
-      return { sensor, min, max, avg, current, dataPoints: values.length };
-    });
-  }, [activeSensors, chartData]);
-
-  // --- обробка відсутності даних ---
+    // --- обробка відсутності даних ---
   if (!data || data.length === 0) {
     return (
       <div className="user-mode">
