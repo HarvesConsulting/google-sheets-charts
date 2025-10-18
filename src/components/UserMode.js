@@ -22,24 +22,75 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     setVisibleSensors(initialVisibility);
   }, [sensors]);
 
-  // Підготовка даних для графіка
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+  // Функція для конвертації дати з рядка в timestamp
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
     
-    let processedData = data.map(row => {
+    try {
+      // Спроба розпарсити формат "dd.mm.yyyy hh:mm:ss"
+      const parts = dateString.toString().split(' ');
+      if (parts.length >= 2) {
+        const dateParts = parts[0].split('.');
+        const timeParts = parts[1].split(':');
+        
+        if (dateParts.length === 3 && timeParts.length >= 2) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1; // Місяці з 0 до 11
+          const year = parseInt(dateParts[2], 10);
+          const hours = parseInt(timeParts[0], 10);
+          const minutes = parseInt(timeParts[1], 10);
+          const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+          
+          return new Date(year, month, day, hours, minutes, seconds).getTime();
+        }
+      }
+      
+      // Спроба стандартного парсингу
+      const parsed = new Date(dateString);
+      return isNaN(parsed.getTime()) ? null : parsed.getTime();
+    } catch {
+      return null;
+    }
+  };
+
+  // Підготовка даних для графіка - ВИПРАВЛЕНА ВЕРСІЯ
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) {
+      console.log('❌ Немає даних для обробки');
+      return [];
+    }
+    
+    console.log('📊 Оригінальні дані:', data.slice(0, 3));
+    console.log('🎯 Конфігурація:', config);
+    console.log('🔧 Датчики:', sensors);
+
+    let processedData = data.map((row, index) => {
+      const timestamp = parseDate(row[config.xAxis]);
+      
+      if (!timestamp) {
+        console.log(`⚠️ Не вдалося розпарсити дату: ${row[config.xAxis]}`);
+        return null;
+      }
+
       const dataPoint = {
         name: row[config.xAxis],
-        timestamp: new Date(row[config.xAxis].replace(/(\d{2})\.(\d{2})\.(\d{4})/, '$3-$2-$1')).getTime()
+        timestamp: timestamp,
+        displayTime: formatDateForDisplay(timestamp)
       };
       
       sensors.forEach(sensor => {
         if (visibleSensors[sensor.column] !== false) {
-          dataPoint[sensor.column] = row[sensor.column] ? parseFloat(row[sensor.column]) || 0 : null;
+          const value = row[sensor.column];
+          dataPoint[sensor.column] = value !== undefined && value !== null && value !== '' 
+            ? parseFloat(value) 
+            : null;
         }
       });
       
       return dataPoint;
-    }).filter(item => item.name && !isNaN(item.timestamp));
+    }).filter(item => item !== null && item.name);
+
+    console.log('📈 Оброблені дані:', processedData.slice(0, 3));
 
     // Сортування за часом
     processedData.sort((a, b) => a.timestamp - b.timestamp);
@@ -60,10 +111,11 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       }
     }
 
+    console.log('✅ Фінальні дані для графіка:', processedData.length, 'точок');
     return processedData;
-  }, [data, config.xAxis, sensors, visibleSensors, timeRange]);
+  }, [data, config, sensors, visibleSensors, timeRange]);
 
-  const formatDate = (timestamp) => {
+  const formatDateForDisplay = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString('uk-UA', {
       day: '2-digit',
@@ -114,13 +166,34 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   }, [activeSensors, chartData]);
 
-  if (data.length === 0) {
+  // Додамо перевірку на наявність даних
+  if (!data || data.length === 0) {
     return (
       <div className="user-mode">
         <div className="no-data">
           <div className="no-data-icon">📊</div>
           <h2>Немає даних для відображення</h2>
           <p>Перейдіть в режим налаштувань для завантаження даних</p>
+          <button onClick={onBackToDeveloper} className="btn btn-primary">
+            ⚙️ Перейти до налаштувань
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <div className="user-mode">
+        <div className="no-data">
+          <div className="no-data-icon">⚠️</div>
+          <h2>Не вдалося підготувати дані для графіка</h2>
+          <p>Перевірте:</p>
+          <ul style={{ textAlign: 'left', display: 'inline-block', color: '#cbd5e1' }}>
+            <li>Чи правильно обрана вісь X (колонка з датами)</li>
+            <li>Чи додані датчики для осі Y</li>
+            <li>Чи формат дат відповідає "dd.mm.yyyy hh:mm:ss"</li>
+          </ul>
           <button onClick={onBackToDeveloper} className="btn btn-primary">
             ⚙️ Перейти до налаштувань
           </button>
@@ -144,7 +217,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis 
               dataKey="timestamp" 
-              tickFormatter={formatDate}
+              tickFormatter={formatDateForDisplay}
               interval="preserveStartEnd"
               stroke="#9CA3AF"
             />
@@ -177,7 +250,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 activeDot={{ r: 6, stroke: sensor.color, strokeWidth: 2 }}
               />
             ))}
-            <Brush dataKey="timestamp" height={30} stroke="#374151" tickFormatter={formatDate} />
+            <Brush dataKey="timestamp" height={30} stroke="#374151" tickFormatter={formatDateForDisplay} />
           </AreaChart>
         );
 
@@ -187,7 +260,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis 
               dataKey="timestamp" 
-              tickFormatter={formatDate}
+              tickFormatter={formatDateForDisplay}
               interval="preserveStartEnd"
               stroke="#9CA3AF"
             />
@@ -224,7 +297,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis 
               dataKey="timestamp" 
-              tickFormatter={formatDate}
+              tickFormatter={formatDateForDisplay}
               interval="preserveStartEnd"
               stroke="#9CA3AF"
             />
@@ -276,7 +349,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={showGrid ? 0.3 : 0} />
             <XAxis 
               dataKey="timestamp" 
-              tickFormatter={formatDate}
+              tickFormatter={formatDateForDisplay}
               interval="preserveStartEnd"
               stroke="#9CA3AF"
             />
@@ -312,7 +385,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 }}
               />
             ))}
-            <Brush dataKey="timestamp" height={30} stroke="#374151" tickFormatter={formatDate} />
+            <Brush dataKey="timestamp" height={30} stroke="#374151" tickFormatter={formatDateForDisplay} />
             <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
           </LineChart>
         );
