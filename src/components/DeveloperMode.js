@@ -88,11 +88,6 @@ const DeveloperMode = ({
 
   return (
     <div className="developer-mode">
-      <div className="mode-header">
-        <h2>👨‍💻 Режим налаштування</h2>
-        <p>Налаштуйте підключення до Google Sheets та конфігуруйте графік</p>
-      </div>
-
       <div className="developer-content">
         <div className="config-panel">
           <form onSubmit={handleSubmit} className="config-form">
@@ -298,9 +293,9 @@ const DeveloperMode = ({
                   type="button" 
                   onClick={onEnterUserMode}
                   disabled={!isFormValid}
-                  className="btn btn-primary"
+                  className="btn btn-secondary"
                 >
-                  📊 Перейти до графіка ({localSensors.length} датчик{localSensors.length !== 1 ? 'ів' : ''})
+                  📊 Перейти до графіків ({localSensors.length} датчик{localSensors.length !== 1 ? 'ів' : ''})
                 </button>
               )}
             </div>
