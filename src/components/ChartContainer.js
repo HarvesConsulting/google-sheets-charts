@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Cell
 } from 'recharts';
+import { cleanChartData } from '../services/googleSheetsAPI';
 
 const ChartContainer = ({ data, config }) => {
   const [chartType, setChartType] = useState('line');
@@ -11,13 +12,29 @@ const ChartContainer = ({ data, config }) => {
   // Кольори для графіків
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
+  // Очищаємо дані для графіків
+  const cleanedData = useMemo(() => {
+    return cleanChartData(data, config.xAxis, config.yAxis);
+  }, [data, config.xAxis, config.yAxis]);
+
   const renderChart = () => {
-    if (!data || data.length === 0) {
-      return <div className="no-data">📊 Немає даних для відображення</div>;
+    if (!cleanedData || cleanedData.length === 0) {
+      return (
+        <div className="no-data">
+          📊 Немає даних для відображення. 
+          <br />
+          <small>
+            Перевірте: 
+            <br />- Чи є числові дані в колонці "{config.yAxis}"
+            <br />- Чи немає порожніх комірок
+            <br />- Чи правильно вказані назви колонок
+          </small>
+        </div>
+      );
     }
 
     const commonProps = {
-      data: data,
+      data: cleanedData,
       margin: { top: 20, right: 30, left: 20, bottom: 5 }
     };
 
@@ -56,7 +73,7 @@ const ChartContainer = ({ data, config }) => {
         return (
           <PieChart {...commonProps}>
             <Pie
-              data={data}
+              data={cleanedData}
               dataKey={config.yAxis}
               nameKey={config.xAxis}
               cx="50%"
@@ -65,7 +82,7 @@ const ChartContainer = ({ data, config }) => {
               fill="#8884d8"
               label
             >
-              {data.map((entry, index) => (
+              {cleanedData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -92,6 +109,10 @@ const ChartContainer = ({ data, config }) => {
           <option value="bar">📊 Стовпчиковий</option>
           <option value="pie">🥧 Кругова діаграма</option>
         </select>
+        
+        <div className="data-stats">
+          📈 Дані: {cleanedData.length} з {data.length} рядків (відфільтровано)
+        </div>
       </div>
       
       <div className="chart-wrapper">
@@ -103,7 +124,7 @@ const ChartContainer = ({ data, config }) => {
       <div className="data-preview">
         <h4>👀 Попередній перегляд даних (перші 5 рядків):</h4>
         <pre>{JSON.stringify(data.slice(0, 5), null, 2)}</pre>
-        <p>Всього рядків: {data.length}</p>
+        <p>Всього рядків: {data.length} | Відфільтровано: {cleanedData.length}</p>
       </div>
     </div>
   );
