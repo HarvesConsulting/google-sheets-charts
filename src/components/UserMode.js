@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine, Brush, Bar as RechartsBar
+  ReferenceLine, Brush
 } from 'recharts';
 import './UserMode.css';
 
