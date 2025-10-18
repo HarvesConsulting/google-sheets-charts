@@ -123,7 +123,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const renderChart = () => {
     const commonProps = {
       data: chartData,
-      margin: { top: 20, right: 30, left: 20, bottom: 20 }
+      margin: { top: 20, right: 30, left: 5, bottom: 20 }
     };
 
     const tooltipProps = {
@@ -198,7 +198,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 name={sensor.name}
               />
             ))}
-            <Brush dataKey="timestamp" height={30} stroke="#374151" tickFormatter={formatDateForDisplay} />
+            
             <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
           </LineChart>
         );
