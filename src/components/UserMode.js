@@ -150,8 +150,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       left: coordinate?.x,
       top: coordinate?.y - 60,
       transform: 'translateX(-50%)',
-      background: '#ffffff', // БІЛИЙ ФОН
-      color: '#000000', // ЧОРНИЙ ТЕКСТ
+      background: '#ffffff',
+      color: '#000000',
       border: '1px solid #e5e7eb',
       borderRadius: '8px',
       padding: '10px 14px',
@@ -227,12 +227,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      <header className="user-header">
-        <div className="header-content">
-          <h1>📊 Графік даних</h1>
-        </div>
-      </header>
-
       <div className="controls-panel">
         <div className="controls-group">
           <label>Період часу:</label>
@@ -276,15 +270,15 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               data={chartData}
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
               <XAxis 
                 dataKey="timestamp" 
                 tickFormatter={formatDateForDisplay} 
-                stroke="#9CA3AF" 
+                stroke="#6b7280" 
                 fontSize={12}
               />
               <YAxis 
-                stroke="#9CA3AF" 
+                stroke="#6b7280" 
                 width={30} 
                 domain={[yMin, yMax]} 
                 fontSize={12}
@@ -298,7 +292,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                   type={lineType}
                   dataKey={sensor.column}
                   stroke={sensor.color || '#3b82f6'}
-                  strokeWidth={3}
+                  strokeWidth={4} // Насищеніша лінія
                   dot={false}
                   name={sensor.name}
                 />
