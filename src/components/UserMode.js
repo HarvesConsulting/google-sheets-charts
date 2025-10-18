@@ -126,19 +126,34 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
-    const tooltipProps = {
-      formatter: (value, name) => {
-        const sensor = sensors.find(s => s.column === name);
-        return [value, sensor ? sensor.name : name];
-      },
-      labelFormatter: formatTooltipDate,
-      contentStyle: {
+    const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
+
+  return (
+    <div
+      className="custom-tooltip"
+      style={{
+        position: 'absolute',
+        transform: 'translate(-50%, -100%)',
         background: 'rgba(17, 24, 39, 0.95)',
         border: '1px solid #374151',
         borderRadius: '8px',
-        color: 'white'
-      }
-    };
+        color: 'white',
+        padding: '10px',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <p>{formatTooltipDate(label)}</p>
+      {payload.map((entry, i) => (
+        <div key={i}>
+          <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
     switch (chartType) {
       case 'area':
