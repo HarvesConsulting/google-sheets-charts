@@ -23,7 +23,6 @@ const DeveloperMode = ({
     if (data && data.length > 0) {
       const columns = getAvailableColumns(data);
       setAvailableColumns(columns);
-      console.log('📊 Доступні колонки для вибору:', columns);
     }
   }, [data]);
 
@@ -123,35 +122,6 @@ const DeveloperMode = ({
               <>
                 <div className="form-section">
                   <h3>📊 Вибір даних для графіка</h3>
-                  
-                  <div className="data-selection-info">
-                    <div className="info-card">
-                      <span className="info-badge">📋 Завантажено рядків: {data.length}</span>
-                      <span className="info-badge">📊 Доступно колонок: {availableColumns.length}</span>
-                      <span className="info-badge">📈 Додано датчиків: {localSensors.length}</span>
-                    </div>
-                    
-                    {availableColumns.length > 0 && (
-                      <div className="columns-preview">
-                        <h4>Доступні колонки:</h4>
-                        <div className="columns-tags">
-                          {availableColumns.map(col => (
-                            <span 
-                              key={col} 
-                              className={`column-tag ${
-                                col === localConfig.xAxis ? 'column-tag-x' : 
-                                localSensors.some(s => s.column === col) ? 'column-tag-y' : ''
-                              }`}
-                            >
-                              {col}
-                              {col === localConfig.xAxis && ' (X)'}
-                              {localSensors.some(s => s.column === col) && ' (Y)'}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
 
                   <div className="form-group">
                     <label>📈 Вісь X (незалежна змінна) *</label>
@@ -249,24 +219,20 @@ const DeveloperMode = ({
                     </div>
                   )}
                 </div>
-
-                <div className="form-section">
-                  <div className="form-group">
-                    <label>🏷️ Назва графіка</label>
-                    <input
-                      type="text"
-                      value={localConfig.chartTitle}
-                      onChange={(e) => handleConfigChange('chartTitle', e.target.value)}
-                      placeholder="Графік залежності..."
-                      className="form-input"
-                    />
-                  </div>
-                </div>
               </>
             )}
 
             {/* Кнопки дій */}
             <div className="action-buttons">
+              <button 
+                type="button" 
+                onClick={onEnterUserMode}
+                disabled={!isFormValid}
+                className="btn btn-secondary"
+              >
+                📊 Перейти до графіків
+              </button>
+              
               <button 
                 type="button" 
                 onClick={() => {
@@ -287,76 +253,12 @@ const DeveloperMode = ({
               >
                 🗑️ Очистити налаштування
               </button>
-              
-              {hasData && (
-                <button 
-                  type="button" 
-                  onClick={onEnterUserMode}
-                  disabled={!isFormValid}
-                  className="btn btn-secondary"
-                >
-                  📊 Перейти до графіків ({localSensors.length} датчик{localSensors.length !== 1 ? 'ів' : ''})
-                </button>
-              )}
             </div>
           </form>
 
           {error && (
             <div className="error-message">
               {error}
-            </div>
-          )}
-
-          {/* Попередній перегляд даних */}
-          {hasData && (
-            <div className="data-preview-section">
-              <h4>👀 Попередній перегляд даних</h4>
-              <div className="preview-info">
-                <p>Відображаються перші 8 рядків з {data.length} завантажених</p>
-              </div>
-              <div className="preview-table">
-                <table>
-                  <thead>
-                    <tr>
-                      {availableColumns.map(col => (
-                        <th 
-                          key={col} 
-                          className={
-                            col === localConfig.xAxis ? 'column-x' :
-                            localSensors.some(s => s.column === col) ? 'column-y' : ''
-                          }
-                        >
-                          {col}
-                          {col === localConfig.xAxis && ' (X)'}
-                          {localSensors.some(s => s.column === col) && ' (Y)'}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.slice(0, 8).map((row, index) => (
-                      <tr key={index}>
-                        {availableColumns.map(col => (
-                          <td 
-                            key={col}
-                            className={
-                              col === localConfig.xAxis ? 'column-x' :
-                              localSensors.some(s => s.column === col) ? 'column-y' : ''
-                            }
-                          >
-                            {row[col] || '-'}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {data.length > 8 && (
-                  <div className="preview-more">
-                    ... і ще {data.length - 8} рядків
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>
