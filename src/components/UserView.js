@@ -21,6 +21,9 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
   const parseDate = useCallback((dateString) => {
     if (!dateString) return new Date();
     
+    // Якщо це вже об'єкт Date, повертаємо його
+    if (dateString instanceof Date) return dateString;
+    
     // Спроба розпарсити формат "dd.mm.yyyy hh:mm:ss"
     const parts = dateString.toString().split(' ');
     if (parts.length >= 2) {
@@ -63,25 +66,42 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
     
+    console.log('Original data sample:', data.slice(0, 3));
+    
     // Створюємо масив даних з правильними датами
-    const preparedData = data.map(row => {
+    const preparedData = data.map((row, index) => {
+      const dateValue = row[config.dateColumn];
+      const parsedDate = parseDate(dateValue);
+      
       const dataPoint = {
-        originalDate: row[config.dateColumn],
-        timestamp: parseDate(row[config.dateColumn]).getTime(),
-        displayDate: formatDateForDisplay(row[config.dateColumn])
+        // Зберігаємо оригінальне значення для ключа
+        date: dateValue,
+        // Додаємо timestamp для сортування
+        timestamp: parsedDate.getTime(),
+        // Додаємо відформатовану дату для відображення
+        displayDate: formatDateForDisplay(dateValue),
+        // Додаємо індекс для уникнення дублікатів
+        index: index
       };
       
+      // Додаємо дані датчиків
       sensors.forEach(sensor => {
         if (sensor.column && visibleSensors[sensor.name] !== false) {
-          dataPoint[sensor.name] = row[sensor.column] ? parseFloat(row[sensor.column]) || 0 : null;
+          const value = row[sensor.column];
+          dataPoint[sensor.name] = value !== undefined && value !== null && value !== '' 
+            ? parseFloat(value) 
+            : null;
         }
       });
       
       return dataPoint;
-    });
+    }).filter(item => item.timestamp > 0); // Фільтруємо невалідні дати
     
     // Сортуємо за датою
-    return preparedData.sort((a, b) => a.timestamp - b.timestamp);
+    const sortedData = preparedData.sort((a, b) => a.timestamp - b.timestamp);
+    
+    console.log('Prepared chart data:', sortedData.slice(0, 3));
+    return sortedData;
   }, [data, config.dateColumn, sensors, visibleSensors, parseDate, formatDateForDisplay]);
 
   // Кастомний компонент для підписів на осі X
@@ -94,7 +114,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
           dy={16} 
           textAnchor="middle" 
           fill="#666" 
-          fontSize={12}
+          fontSize={10}
         >
           {formatDateForDisplay(payload.value)}
         </text>
@@ -110,7 +130,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
           <p className="tooltip-date">{`Дата: ${formatDateForDisplay(label)}`}</p>
           {payload.map((entry, index) => (
             <p key={`item-${index}`} style={{ color: entry.color }}>
-              {`${entry.name}: ${entry.value}`}
+              {`${entry.name}: ${entry.value !== null ? entry.value : 'N/A'}`}
             </p>
           ))}
         </div>
@@ -147,17 +167,21 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
 
     const activeSensors = sensors.filter(sensor => visibleSensors[sensor.name] !== false);
 
+    // Налаштування для осі X в залежності від кількості точок даних
+    const xAxisProps = {
+      dataKey: "date",
+      tick: <CustomXAxisTick />,
+      interval: chartData.length > 10 ? "preserveStartEnd" : 0,
+      minTickGap: 20,
+      height: 60
+    };
+
     switch (chartType) {
       case 'line':
         return (
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="originalDate" 
-              tick={<CustomXAxisTick />}
-              interval="preserveStartEnd"
-              minTickGap={50}
-            />
+            <XAxis {...xAxisProps} />
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -170,6 +194,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 name={sensor.name}
+                isAnimationActive={false}
               />
             ))}
           </LineChart>
@@ -179,12 +204,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
         return (
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="originalDate" 
-              tick={<CustomXAxisTick />}
-              interval="preserveStartEnd"
-              minTickGap={50}
-            />
+            <XAxis {...xAxisProps} />
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -197,6 +217,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
                 fill={sensor.color || '#0088FE'}
                 fillOpacity={0.3}
                 name={sensor.name}
+                isAnimationActive={false}
               />
             ))}
           </AreaChart>
@@ -206,12 +227,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
         return (
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="originalDate" 
-              tick={<CustomXAxisTick />}
-              interval="preserveStartEnd"
-              minTickGap={50}
-            />
+            <XAxis {...xAxisProps} />
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -221,6 +237,7 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
                 dataKey={sensor.name} 
                 fill={sensor.color || '#0088FE'}
                 name={sensor.name}
+                isAnimationActive={false}
               />
             ))}
           </BarChart>
@@ -247,6 +264,12 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
           ⏰ Дані оновлено: {formatLastUpdate()}
         </div>
       </div>
+
+      {chartData.length > 0 && (
+        <div className="data-info">
+          <p>📊 Відображено {chartData.length} точок даних</p>
+        </div>
+      )}
 
       <div className="chart-controls-user">
         <div className="chart-type-selector">
@@ -287,6 +310,17 @@ const UserView = ({ data, config, sensors, loading, error, lastUpdate }) => {
           {renderChart()}
         </ResponsiveContainer>
       </div>
+
+      {/* Додатковий дебаг інформація */}
+      {chartData.length > 0 && (
+        <div className="debug-info" style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+          <details>
+            <summary>Деталі даних (для відладки)</summary>
+            <p>Перші 3 точки даних:</p>
+            <pre>{JSON.stringify(chartData.slice(0, 3), null, 2)}</pre>
+          </details>
+        </div>
+      )}
     </div>
   );
 };
