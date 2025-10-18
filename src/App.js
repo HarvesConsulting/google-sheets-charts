@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
 import DeveloperMode from './components/DeveloperMode';
 import UserMode from './components/UserMode';
