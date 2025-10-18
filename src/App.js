@@ -101,7 +101,7 @@ function App() {
         
         <div className="mode-switcher">
           <button 
-            className={`btn ${isDeveloperMode ? 'btn-active' : 'btn-inactive'}`}
+            className={`mode-btn ${isDeveloperMode ? 'mode-active' : 'mode-inactive'}`}
             onClick={toggleDeveloperMode}
           >
             {isDeveloperMode ? '👨‍💻 Режим розробника' : '👤 Режим користувача'}
@@ -110,62 +110,6 @@ function App() {
       </header>
       
       <div className="container">
-        {isDeveloperMode ? (
-          // Режим розробника
-          <>
-            <DeveloperPanel 
-              config={config}
-              onConfigUpdate={handleConfigUpdate}
-              data={chartData}
-              onRefresh={fetchData}
-              sensors={sensors}
-              onSensorsUpdate={handleSensorsUpdate}
-            />
-            
-            <div className="auto-refresh-panel">
-              <h3>🔄 Автооновлення</h3>
-              <div className="refresh-controls">
-                <button 
-                  className={`btn ${autoRefresh ? 'btn-active' : 'btn-inactive'}`}
-                  onClick={toggleAutoRefresh}
-                >
-                  {autoRefresh ? '⏸️ Призупинити' : '▶️ Увімкнути'} автооновлення
-                </button>
-                
-                <div className="interval-controls">
-                  <label>Інтервал:</label>
-                  <select 
-                    value={refreshInterval / 60000} 
-                    onChange={(e) => handleIntervalChange(Number(e.target.value))}
-                    disabled={!autoRefresh}
-                  >
-                    <option value={1}>1 хвилина</option>
-                    <option value={2}>2 хвилини</option>
-                    <option value={5}>5 хвилин</option>
-                    <option value={10}>10 хвилин</option>
-                    <option value={15}>15 хвилин</option>
-                  </select>
-                </div>
-                
-                <div className="last-update">
-                  ⏰ Останнє оновлення: {formatLastUpdate()}
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          // Режим користувача
-          <UserView 
-            data={chartData}
-            config={config}
-            sensors={sensors}
-            loading={loading}
-            error={error}
-            lastUpdate={lastUpdate}
-          />
-        )}
-        
-        {/* Загальні елементи */}
         {loading && (
           <div className="loading">
             <div className="spinner"></div>
@@ -174,6 +118,65 @@ function App() {
         )}
         
         {error && <div className="error">{error}</div>}
+        
+        {!loading && !error && (
+          <>
+            {isDeveloperMode ? (
+              // Режим розробника
+              <>
+                <DeveloperPanel 
+                  config={config}
+                  onConfigUpdate={handleConfigUpdate}
+                  data={chartData}
+                  onRefresh={fetchData}
+                  sensors={sensors}
+                  onSensorsUpdate={handleSensorsUpdate}
+                />
+                
+                <div className="auto-refresh-panel">
+                  <h3>🔄 Автооновлення</h3>
+                  <div className="refresh-controls">
+                    <button 
+                      className={`btn ${autoRefresh ? 'btn-active' : 'btn-inactive'}`}
+                      onClick={toggleAutoRefresh}
+                    >
+                      {autoRefresh ? '⏸️ Призупинити' : '▶️ Увімкнути'} автооновлення
+                    </button>
+                    
+                    <div className="interval-controls">
+                      <label>Інтервал:</label>
+                      <select 
+                        value={refreshInterval / 60000} 
+                        onChange={(e) => handleIntervalChange(Number(e.target.value))}
+                        disabled={!autoRefresh}
+                      >
+                        <option value={1}>1 хвилина</option>
+                        <option value={2}>2 хвилини</option>
+                        <option value={5}>5 хвилин</option>
+                        <option value={10}>10 хвилин</option>
+                        <option value={15}>15 хвилин</option>
+                      </select>
+                    </div>
+                    
+                    <div className="last-update">
+                      ⏰ Останнє оновлення: {formatLastUpdate()}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Режим користувача
+              <UserView 
+                data={chartData}
+                config={config}
+                sensors={sensors.filter(sensor => sensor.visible)}
+                loading={loading}
+                error={error}
+                lastUpdate={lastUpdate}
+              />
+            )}
+          </>
+        )}
       </div>
     </div>
   );

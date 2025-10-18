@@ -450,3 +450,120 @@
     flex-direction: column;
   }
 }
+/* Стилі для перемикача режимів */
+.mode-switcher {
+  margin-top: 15px;
+}
+
+.mode-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.mode-active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.mode-inactive {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Стилі для панелі автооновлення */
+.auto-refresh-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.auto-refresh-panel h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.refresh-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-active {
+  background: #00C49F !important;
+  color: white !important;
+}
+
+.btn-inactive {
+  background: #f8f9fa !important;
+  color: #333 !important;
+  border: 2px solid #e1e5e9 !important;
+}
+
+.interval-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.interval-controls label {
+  font-weight: 600;
+  color: #555;
+  margin: 0;
+}
+
+.interval-controls select {
+  padding: 8px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  background: white;
+}
+
+.interval-controls select:disabled {
+  background: #f8f9fa;
+  color: #999;
+}
+
+.last-update {
+  color: #666;
+  font-size: 14px;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+/* Адаптивність для мобільних пристроїв */
+@media (max-width: 768px) {
+  .refresh-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .interval-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .mode-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
