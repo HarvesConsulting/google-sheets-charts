@@ -164,12 +164,12 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
     return (
       <div className="custom-tooltip" style={tooltipStyle}>
-        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#1e293b' }}>
+        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#000000' }}>
           {formatTooltipDate(label)}
         </div>
         {payload.map((entry, i) => (
-          <div key={i} style={{ color: '#1e293b' }}>
-            <strong style={{ color: entry.color || '#3b82f6' }}>{entry.name}:</strong> {entry.value}
+          <div key={i} style={{ color: '#000000' }}>
+            <strong style={{ color: entry.color || '#1e3a8a' }}>{entry.name}:</strong> {entry.value}
           </div>
         ))}
       </div>
@@ -254,7 +254,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 />
                 <span 
                   className="sensor-color" 
-                  style={{ backgroundColor: sensor.color || '#3b82f6' }}
+                  style={{ backgroundColor: sensor.color || '#1e3a8a' }}
                 ></span>
                 <span className="sensor-name">{sensor.name}</span>
               </label>
@@ -274,11 +274,11 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               <XAxis 
                 dataKey="timestamp" 
                 tickFormatter={formatDateForDisplay} 
-                stroke="#6b7280" 
+                stroke="#000000" 
                 fontSize={12}
               />
               <YAxis 
-                stroke="#6b7280" 
+                stroke="#000000" 
                 width={30} 
                 domain={[yMin, yMax]} 
                 fontSize={12}
@@ -291,9 +291,9 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                   key={sensor.column}
                   type={lineType}
                   dataKey={sensor.column}
-                  stroke={sensor.color || '#3b82f6'}
+                  stroke={sensor.color || '#1e3a8a'} // Темно-синій колір
                   strokeWidth={4}
-                  strokeOpacity={1} // Повна непрозорість
+                  strokeOpacity={1}
                   dot={false}
                   name={sensor.name}
                 />
@@ -320,7 +320,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             const avg = sensorData.reduce((a, b) => a + b, 0) / sensorData.length;
 
             return (
-              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: sensor.color || '#3b82f6' }}>
+              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: sensor.color || '#1e3a8a' }}>
                 <div className="stat-header">
                   <h4>{sensor.name}</h4>
                   <div className="data-points">{sensorData.length} точок</div>
