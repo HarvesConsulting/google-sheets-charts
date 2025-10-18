@@ -123,7 +123,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const renderChart = () => {
     const commonProps = {
       data: chartData,
-      margin: { top: 20, right: 30, left: 5, bottom: 20 }
+      margin: { top: 10, right: 20, left: 0, bottom: 10 }
     };
 
     const tooltipProps = {
