@@ -162,7 +162,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" width={30} />
-            <Tooltip {...tooltipProps} />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map(sensor => (
               <Area
@@ -187,7 +187,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" width={30} />
 
-            <Tooltip {...tooltipProps} />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map(sensor => (
               <Bar key={sensor.column} dataKey={sensor.column} fill={sensor.color} name={sensor.name} />
@@ -202,7 +202,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" width={30} />
 
-            <Tooltip {...tooltipProps} />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             {activeSensors.map(sensor => (
               <Line
