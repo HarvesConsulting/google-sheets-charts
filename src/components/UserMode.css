@@ -1,4 +1,4 @@
-/* === UserMode.css: Світла тема === */
+/* === UserMode.css: Світла тема з гамбургером === */
 
 html, body {
   height: 100%;
@@ -21,8 +21,39 @@ html, body {
   background: #ffffff;
   overflow-x: hidden;
   touch-action: pan-y;
+  position: relative;
 }
 
+/* === Гамбургер === */
+.hamburger-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  z-index: 1100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s;
+}
+
+.hamburger-toggle:hover {
+  background: #e5e7eb;
+}
+
+.hamburger-line {
+  width: 20px;
+  height: 2px;
+  background: #111827;
+  border-radius: 1px;
+}
+
+/* === Хедер === */
 .user-header {
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
@@ -69,25 +100,27 @@ html, body {
   color: #111827;
 }
 
-.filters-collapse {
-  background: #f3f4f6;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 10px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.filters-collapse summary {
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
+/* === Панель керування === */
 .controls-panel {
+  position: fixed;
+  top: 70px;
+  left: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 1050;
+  width: 260px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.controls-panel.open {
   display: flex;
-  gap: 30px;
-  flex-wrap: wrap;
-  align-items: flex-start;
 }
 
 .controls-group {
@@ -148,6 +181,7 @@ html, body {
   color: #111827;
 }
 
+/* === Графік === */
 .chart-section {
   margin: 20px auto;
   padding: 0 10px;
@@ -207,6 +241,7 @@ html, body {
 .zone-color.yellow { background-color: #fef08a; }
 .zone-color.green { background-color: #bbf7d0; }
 
+/* === Статистика === */
 .statistics-panel {
   max-width: 1200px;
   margin: 30px auto;
@@ -295,6 +330,7 @@ html, body {
 .stat-value.max { color: #2563eb; }
 .stat-value.avg { color: #ca8a04; }
 
+/* === Кнопки === */
 .actions-panel {
   max-width: 1200px;
   margin: 30px auto;
@@ -337,42 +373,7 @@ html, body {
   transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .controls-panel {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 20px;
-  }
-
-  .chart-container {
-    padding: 10px 5px;
-    min-height: 360px;
-  }
-
-  .legend-zones {
-    gap: 10px;
-  }
-
-  .zone-info {
-    font-size: 0.8rem;
-  }
-
-  .actions-panel {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .btn {
-    width: 100%;
-    max-width: 280px;
-  }
-}
-
+/* === Scrollbar === */
 ::-webkit-scrollbar {
   width: 8px;
 }

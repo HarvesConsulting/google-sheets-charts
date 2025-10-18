@@ -8,6 +8,7 @@ import './UserMode.css';
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
   const [timeRange, setTimeRange] = useState('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     const initialVisibility = {};
@@ -120,23 +121,23 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   const getYAxisRange = () => {
     if (chartData.length === 0) return { yMin: 0, yMax: 24 };
-    
+
     let yMin = 0;
     let yMax = 24;
-    
-    const allValues = chartData.flatMap(point => 
+
+    const allValues = chartData.flatMap(point =>
       activeSensors.map(sensor => point[sensor.column]).filter(val => val !== null)
     );
-    
+
     if (allValues.length > 0) {
       yMin = Math.min(...allValues);
       yMax = Math.max(...allValues);
-      
+
       const padding = (yMax - yMin) * 0.1;
       yMin = Math.min(yMin - padding, 0);
       yMax += padding;
     }
-    
+
     return { yMin, yMax };
   };
 
@@ -176,35 +177,11 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     );
   };
 
-  // ЯСКРАВІ ЗОНИ з більшою насиченістю
   const renderZones = () => (
     <>
-      {/* Червона зона: 0-6 - яскраво червона */}
-      <ReferenceArea 
-        y1={0} 
-        y2={6} 
-        fill="#ff4444" 
-        fillOpacity={0.4} 
-        stroke="none"
-      />
-      {/* Жовта зона: 6-18 - яскраво жовта */}
-      <ReferenceArea 
-        y1={6} 
-        y2={18} 
-        fill="#ffcc00" 
-        fillOpacity={0.4} 
-        stroke="none"
-      />
-      {/* Зелена зона: 18+ - яскраво зелена */}
-      <ReferenceArea 
-        y1={18} 
-        y2={yMax} 
-        fill="#44ff44" 
-        fillOpacity={0.4} 
-        stroke="none"
-      />
-      
-      {/* Додаємо межі зон для кращої видимості */}
+      <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.4} stroke="none" />
+      <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.4} stroke="none" />
+      <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.4} stroke="none" />
       <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
       <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
     </>
@@ -227,7 +204,13 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      <div className="controls-panel">
+      <button className="hamburger-toggle" onClick={() => setFiltersOpen(prev => !prev)}>
+        <span className="hamburger-line"></span>
+        <span className="hamburger-line"></span>
+        <span className="hamburger-line"></span>
+      </button>
+
+      <div className={`controls-panel ${filtersOpen ? 'open' : ''}`}>
         <div className="controls-group">
           <label>Період часу:</label>
           <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
@@ -252,10 +235,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                     [sensor.column]: e.target.checked
                   }))}
                 />
-                <span 
-                  className="sensor-color" 
-                  style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-                ></span>
+                <span className="sensor-color" style={{ backgroundColor: sensor.color || '#1e3a8a' }}></span>
                 <span className="sensor-name">{sensor.name}</span>
               </label>
             ))}
@@ -271,18 +251,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-              <XAxis 
-                dataKey="timestamp" 
-                tickFormatter={formatDateForDisplay} 
-                stroke="#000000" 
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="#000000" 
-                width={30} 
-                domain={[yMin, yMax]} 
-                fontSize={12}
-              />
+              <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#000000" fontSize={12} />
+              <YAxis stroke="#000000" width={30} domain={[yMin, yMax]} fontSize={12} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               {renderZones()}
@@ -291,7 +261,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                   key={sensor.column}
                   type={lineType}
                   dataKey={sensor.column}
-                  stroke={sensor.color || '#1e3a8a'} // Темно-синій колір
+                  stroke={sensor.color || '#1e3a8a'}
                   strokeWidth={4}
                   strokeOpacity={1}
                   dot={false}
@@ -311,7 +281,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             const sensorData = chartData
               .map(point => point[sensor.column])
               .filter(val => val !== null);
-            
+
             if (sensorData.length === 0) return null;
 
             const current = sensorData[sensorData.length - 1];
