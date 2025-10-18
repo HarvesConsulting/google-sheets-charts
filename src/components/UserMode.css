@@ -188,18 +188,19 @@
 
 /* Chart Section */
 .chart-section {
-  max-width: 1200px;
-  margin: 30px auto;
-  padding: 0 20px;
+  margin: 20px auto;
+  padding: 0 10px;
+  max-width: 100%; /* Даємо більше простору */
 }
 
 .chart-container {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid #475569;
-  border-radius: 16px;
-  padding: 25px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  background: #ffffff; /* Білий фон */
+  border: 1px solid #e5e7eb; /* Світлий бордер */
+  border-radius: 12px;
+  padding: 15px 10px; /* Менше падінгів */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  margin: 20px auto;
+  max-width: 98%; /* Розширюємо графік */
 }
 
 /* Statistics */
