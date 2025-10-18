@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
 import ChartContainer from './components/ChartContainer';
 import SheetConfig from './components/SheetConfig';
@@ -18,7 +18,8 @@ function App() {
     yAxis: 'Count'
   });
 
-  const fetchData = async () => {
+  // Використовуємо useCallback щоб уникнути зайвих ререндерів
+  const fetchData = useCallback(async () => {
     if (!config.sheetId) {
       setError('⚠️ Будь ласка, введіть ID таблиці');
       return;
@@ -37,13 +38,13 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [config.sheetId, config.sheetName, config.range]);
 
   useEffect(() => {
     if (config.sheetId) {
       fetchData();
     }
-  }, [config]);
+  }, [config.sheetId, fetchData]); // Тепер fetchData в залежностях
 
   const handleConfigUpdate = (newConfig) => {
     setConfig(newConfig);
