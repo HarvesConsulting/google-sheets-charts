@@ -1,195 +1,158 @@
-.App {
-  text-align: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* App.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
 .App-header {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  padding: 20px;
-  color: white;
-  margin-bottom: 30px;
+  padding: 20px 0;
+  text-align: center;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .App-header h1 {
-  margin: 0;
   font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
 }
 
 .App-header p {
-  margin: 10px 0 0 0;
-  opacity: 0.9;
+  font-size: 1.1rem;
+  color: #666;
+  font-weight: 400;
 }
 
+/* Main Container */
 .container {
+  flex: 1;
+  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  width: 100%;
 }
 
-/* Стилі для форми налаштувань */
-.sheet-config {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  margin-bottom: 30px;
-}
-
-.sheet-config h3 {
-  color: #333;
-  margin-bottom: 25px;
-  font-size: 1.5rem;
-}
-
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
+/* Common Button Styles */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: 600;
-  color: #555;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 140px;
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* Form Styles */
 .form-input {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #e1e5e9;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
   border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+  font-family: inherit;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.form-group small {
-  display: block;
-  margin-top: 5px;
-  color: #888;
-  font-size: 12px;
+.form-input::placeholder {
+  color: #6c757d;
 }
 
-.buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-.btn {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s;
-  flex: 1;
-}
-
-.btn-primary {
-  background: #667eea;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #5a6fd8;
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background: #f8f9fa;
-  color: #333;
-  border: 2px solid #e1e5e9;
-}
-
-.btn-secondary:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
-}
-
-/* Стилі для графіків */
-.chart-container {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.chart-controls {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
-  justify-content: center;
-}
-
-.chart-controls h3 {
-  margin: 0;
-  color: #333;
-}
-
-.chart-select {
-  padding: 10px 15px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  background: white;
-}
-
-.chart-wrapper {
-  margin: 20px 0;
-}
-
-.data-preview {
-  margin-top: 30px;
-  text-align: left;
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-}
-
-.data-preview h4 {
-  margin: 0 0 15px 0;
-  color: #333;
-}
-
-.data-preview pre {
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  overflow-x: auto;
-  font-size: 14px;
-  border: 1px solid #e1e5e9;
-}
-
-/* Стани завантаження та помилок */
+/* Loading Animation */
 .loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 15px;
-  padding: 30px;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  font-size: 18px;
-  color: #667eea;
-  margin: 20px 0;
+  padding: 40px;
+  color: #666;
 }
 
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #667eea;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-bottom: 15px;
 }
 
 @keyframes spin {
@@ -197,493 +160,144 @@
   100% { transform: rotate(360deg); }
 }
 
-.error {
-  background: #fee;
-  color: #c33;
-  padding: 20px;
+/* Error Messages */
+.error-message {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+  padding: 16px 20px;
   border-radius: 8px;
   margin: 20px 0;
-  border-left: 4px solid #c33;
+  border: 1px solid #f5c6cb;
+  border-left: 4px solid #dc3545;
+  font-weight: 500;
 }
 
-.no-data {
-  background: white;
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  font-size: 18px;
-  color: #666;
+/* Success Messages */
+.success-message {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+  padding: 16px 20px;
+  border-radius: 8px;
   margin: 20px 0;
+  border: 1px solid #c3e6cb;
+  border-left: 4px solid #28a745;
+  font-weight: 500;
 }
 
-/* Адаптивність */
+/* Card Styles */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+  .App-header h1 {
+    font-size: 2rem;
+  }
+  
+  .App-header p {
+    font-size: 1rem;
+  }
+  
+  .container {
+    padding: 15px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    min-width: 120px;
+  }
+  
+  .card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .App-header h1 {
+    font-size: 1.8rem;
+  }
+  
   .container {
     padding: 10px;
   }
   
-  .sheet-config,
-  .chart-container {
-    padding: 20px;
-  }
-  
-  .chart-controls {
-    flex-direction: column;
-  }
-  
-  .buttons {
-    flex-direction: column;
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }
-/* Стилі для панелі розробника */
-.developer-panel {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
 }
 
-.config-section, .sensors-section {
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.sensor-config {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  border-left: 4px solid #007bff;
-}
-
-.sensor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.sensor-header h4 {
-  margin: 0;
-  color: #333;
-}
-
-.sensor-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.btn-danger {
-  background: #dc3545 !important;
-  color: white !important;
-}
-
-/* Стилі для сторінки користувача */
-.user-view {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.user-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.last-update-user {
-  background: #e7f3ff;
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-size: 14px;
-  color: #007bff;
-}
-
-.chart-controls-user {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 30px;
-  margin-bottom: 20px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
-}
-
-.chart-type-selector, .sensors-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.sensors-toggle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.sensor-toggle-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 6px;
-  border: 2px solid #e1e5e9;
-}
-
-.sensor-toggle-item input[type="checkbox"]:checked {
-  background: #007bff;
-}
-
-.sensor-color-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.chart-wrapper-user {
-  margin: 30px 0;
-}
-
-/* Статистика */
-.sensors-stats {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 2px solid #f0f0f0;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.stat-item {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 4px solid #007bff;
-}
-
-.stat-item h4 {
-  margin: 0 0 10px 0;
-  color: #333;
-}
-
-/* Попередній перегляд даних */
-.data-preview {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  margin-top: 20px;
-}
-
-.preview-info {
-  background: #e7f3ff;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.preview-table {
-  max-height: 400px;
-  overflow: auto;
-}
-
-.preview-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.preview-table th,
-.preview-table td {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
+.text-left {
   text-align: left;
 }
 
-.preview-table th {
-  background: #f8f9fa;
-  font-weight: 600;
+.text-right {
+  text-align: right;
 }
 
-.preview-more {
-  text-align: center;
-  padding: 10px;
-  background: #f8f9fa;
-  color: #666;
-  font-style: italic;
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 10px; }
+.mb-2 { margin-bottom: 20px; }
+.mb-3 { margin-bottom: 30px; }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mt-3 { margin-top: 30px; }
+
+.p-0 { padding: 0; }
+.p-1 { padding: 10px; }
+.p-2 { padding: 20px; }
+.p-3 { padding: 30px; }
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Перемикач режимів */
-.mode-switcher {
-  margin-top: 15px;
-}
-
-/* Адаптивність */
-@media (max-width: 768px) {
-  .sensor-fields {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-controls-user {
-    grid-template-columns: 1fr;
-  }
-  
-  .user-header {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-  
-  .sensors-toggle {
-    flex-direction: column;
-  }
-}
-/* Стилі для перемикача режимів */
-.mode-switcher {
-  margin-top: 15px;
-}
-
-.mode-btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 25px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.mode-active {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-}
-
-.mode-inactive {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.mode-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
-}
-
-/* Стилі для панелі автооновлення */
-.auto-refresh-panel {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-}
-
-.auto-refresh-panel h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 1.2rem;
-}
-
-.refresh-controls {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.btn-active {
-  background: #00C49F !important;
-  color: white !important;
-}
-
-.btn-inactive {
-  background: #f8f9fa !important;
-  color: #333 !important;
-  border: 2px solid #e1e5e9 !important;
-}
-
-.interval-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.interval-controls label {
-  font-weight: 600;
-  color: #555;
-  margin: 0;
-}
-
-.interval-controls select {
-  padding: 8px 12px;
-  border: 2px solid #e1e5e9;
-  border-radius: 6px;
-  background: white;
-}
-
-.interval-controls select:disabled {
-  background: #f8f9fa;
-  color: #999;
-}
-
-.last-update {
-  color: #666;
-  font-size: 14px;
-  background: #f8f9fa;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border-left: 3px solid #007bff;
-}
-
-/* Адаптивність для мобільних пристроїв */
-@media (max-width: 768px) {
-  .refresh-controls {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  
-  .interval-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .mode-btn {
-    width: 100%;
-    text-align: center;
-  }
-}
-/* Стилі для помилок з кнопками */
-.error-with-retry {
-  background: #fee;
-  color: #c33;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
-  border-left: 4px solid #c33;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.error-message {
-  flex: 1;
-  margin: 0;
-}
-
-.error .btn {
-  margin-left: 15px;
-}
-
-/* Стилі для пустого стану в режимі користувача */
-.no-data-user {
-  background: white;
-  padding: 50px 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  margin: 20px 0;
-}
-
-.no-data-user h3 {
-  color: #666;
-  margin-bottom: 15px;
-}
-
-.no-data-user p {
-  color: #888;
-  margin-bottom: 25px;
-}
-
-/* Покращені стилі для кнопок */
-.btn-small {
-  padding: 8px 16px;
-  font-size: 0.9rem;
-}
-
-/* Адаптивність для помилок */
-@media (max-width: 768px) {
-  .error-with-retry {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-  
-  .error-message {
-    margin-bottom: 15px;
-  }
-  
-  .error .btn {
-    margin-left: 0;
-    margin-top: 10px;
-    width: 100%;
-  }
-}
-.custom-tooltip {
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ccc;
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 4px;
-  padding: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.tooltip-date {
-  font-weight: bold;
-  margin-bottom: 5px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
-.custom-tooltip p {
-  margin: 2px 0;
-  font-size: 14px;
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-/* Додаткові стилі для кращого відображення */
-.user-view {
-  padding: 20px;
+/* Focus Styles for Accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
 
-.chart-controls-user {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.sensors-toggle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.sensor-toggle-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-}
-
-.sensor-color-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
+/* Print Styles */
+@media print {
+  .App-header {
+    background: white;
+    color: black;
+  }
+  
+  .btn {
+    display: none;
+  }
 }
