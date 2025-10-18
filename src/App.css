@@ -11,7 +11,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff; /* БІЛИЙ ФОН СТОРІНКИ */
   min-height: 100vh;
   color: #333;
 }
@@ -22,11 +22,10 @@ body {
   flex-direction: column;
 }
 
-/* Header Styles */
+/* Header Styles - СИНІЙ З БІЛИМ ТЕКСТОМ */
 .App-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 20px 0;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); /* СИНІЙ ГРАДІЄНТ */
+  padding: 25px 0;
   text-align: center;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -35,16 +34,13 @@ body {
 .App-header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff; /* БІЛИЙ ТЕКСТ */
   margin-bottom: 8px;
 }
 
 .App-header p {
   font-size: 1.1rem;
-  color: #666;
+  color: #e2e8f0; /* СВІТЛО-СИНІЙ ТЕКСТ */
   font-weight: 400;
 }
 
@@ -55,6 +51,7 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  background: #ffffff; /* БІЛИЙ ФОН КОНТЕЙНЕРА */
 }
 
 /* Common Button Styles */
@@ -81,36 +78,36 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); /* СИНІЙ */
   color: white;
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  background: linear-gradient(135deg, #475569 0%, #334155 100%); /* СІРИЙ */
   color: white;
-  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+  box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3);
 }
 
 .btn-secondary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+  box-shadow: 0 6px 20px rgba(71, 85, 105, 0.4);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%); /* ЗЕЛЕНИЙ */
   color: white;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
 }
 
 .btn-success:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
 }
 
 /* Form Styles */
@@ -127,8 +124,8 @@ body {
 
 .form-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: #1e40af; /* СИНІЙ */
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
 }
 
 .form-input::placeholder {
@@ -149,7 +146,7 @@ body {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border-top: 4px solid #1e40af; /* СИНІЙ */
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 15px;
@@ -162,25 +159,25 @@ body {
 
 /* Error Messages */
 .error-message {
-  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-  color: #721c24;
+  background: #fef2f2;
+  color: #dc2626;
   padding: 16px 20px;
   border-radius: 8px;
   margin: 20px 0;
-  border: 1px solid #f5c6cb;
-  border-left: 4px solid #dc3545;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
   font-weight: 500;
 }
 
 /* Success Messages */
 .success-message {
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  color: #155724;
+  background: #f0fdf4;
+  color: #16a34a;
   padding: 16px 20px;
   border-radius: 8px;
   margin: 20px 0;
-  border: 1px solid #c3e6cb;
-  border-left: 4px solid #28a745;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
   font-weight: 500;
 }
 
@@ -189,9 +186,8 @@ body {
   background: white;
   border-radius: 12px;
   padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
 }
 
 /* Responsive Design */
@@ -286,7 +282,7 @@ button:focus,
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid #007bff;
+  outline: 2px solid #1e40af; /* СИНІЙ */
   outline-offset: 2px;
 }
 
