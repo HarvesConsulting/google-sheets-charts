@@ -8,11 +8,11 @@ const StartScreen = ({ onDeveloperMode, onUserMode, hasSavedConfig }) => {
       
       <div className="mode-buttons">
         <button onClick={onDeveloperMode} className="btn btn-primary">
-          ⚙️ Налаштування
+          ⚙️
         </button>
         
         <button onClick={onUserMode} className="btn btn-secondary">
-          📊 Перегляд графіків
+          📊 Графіки
         </button>
       </div>
 
