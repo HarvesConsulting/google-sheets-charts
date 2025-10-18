@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine, Scatter
 } from 'recharts';
 import './UserMode.css';
 
@@ -74,16 +74,19 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   // Функція для визначення кольору точки
   const getDotColor = (value) => {
-    if (value === null || value === undefined) return '#9CA3AF'; // сірий для відсутніх значень
-    if (value >= 18) return '#3b82f6'; // синій
-    if (value > 6 && value < 18) return '#eab308'; // жовтий
-    return '#ef4444'; // червоний
+    if (value === null || value === undefined) return '#9CA3AF';
+    if (value >= 18) return '#3b82f6';
+    if (value > 6 && value < 18) return '#eab308';
+    return '#ef4444';
   };
 
-  // Кастомний компонент для точок
-  const CustomizedDot = (props) => {
-    const { cx, cy, value } = props;
-
+  // Кастомний компонент для ВСІХ точок
+  const RenderCustomizedDot = (props) => {
+    const { cx, cy, payload, dataKey } = props;
+    
+    if (!payload || !dataKey) return null;
+    
+    const value = payload[dataKey];
     if (value === null || value === undefined) return null;
 
     return (
@@ -92,27 +95,37 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         cy={cy}
         r={4}
         fill={getDotColor(value)}
-        stroke="#fff"
-        strokeWidth={2}
+        stroke="#ffffff"
+        strokeWidth={1.5}
       />
     );
   };
 
-  // Кастомний компонент для активної точки (при наведенні)
-  const CustomizedActiveDot = (props) => {
-    const { cx, cy, value } = props;
-
-    if (value === null || value === undefined) return null;
+  // Альтернативний спосіб: окремий компонент Scatter для точок
+  const ColorCodedPoints = ({ data, dataKey, color }) => {
+    const points = data
+      .filter(item => item[dataKey] !== null && item[dataKey] !== undefined)
+      .map((item, index) => ({
+        x: item.timestamp,
+        y: item[dataKey],
+        value: item[dataKey],
+        color: getDotColor(item[dataKey])
+      }));
 
     return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={6}
-        fill={getDotColor(value)}
-        stroke="#1f2937"
-        strokeWidth={2}
-      />
+      <Scatter data={points}>
+        {points.map((point, index) => (
+          <circle
+            key={index}
+            cx={point.x}
+            cy={point.y}
+            r={4}
+            fill={point.color}
+            stroke="#ffffff"
+            strokeWidth={1.5}
+          />
+        ))}
+      </Scatter>
     );
   };
 
@@ -127,7 +140,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       const dataPoint = {
         name: rawDate,
         timestamp,
-        displayTime: formatDateForDisplay(timestamp)
+        displayTime: formatDateForDisplay(timestamp),
+        originalTimestamp: rawDate
       };
 
       sensors.forEach(sensor => {
@@ -225,7 +239,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               dataKey="timestamp" 
               tickFormatter={formatDateForDisplay} 
               stroke="#9CA3AF"
-              interval="preserveStartEnd"
             />
             <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip content={<CustomTooltip />} />
@@ -238,10 +251,10 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 stroke={sensor.color}
                 fill={sensor.color}
                 fillOpacity={0.3}
-                strokeWidth={3}
-                dot={<CustomizedDot />}
-                activeDot={<CustomizedActiveDot />}
-                connectNulls={false}
+                strokeWidth={2}
+                dot={(props) => <RenderCustomizedDot {...props} dataKey={sensor.column} />}
+                activeDot={{ r: 6, strokeWidth: 2 }}
+                isAnimationActive={false}
               />
             ))}
           </AreaChart>
@@ -255,7 +268,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               dataKey="timestamp" 
               tickFormatter={formatDateForDisplay} 
               stroke="#9CA3AF"
-              interval="preserveStartEnd"
             />
             <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip content={<CustomTooltip />} />
@@ -279,7 +291,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               dataKey="timestamp" 
               tickFormatter={formatDateForDisplay} 
               stroke="#9CA3AF"
-              interval="preserveStartEnd"
             />
             <YAxis stroke="#9CA3AF" width={30} />
             <Tooltip content={<CustomTooltip />} />
@@ -290,12 +301,21 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 type={lineType}
                 dataKey={sensor.column}
                 stroke={sensor.color}
-                strokeWidth={3}
-                dot={<CustomizedDot />}
-                activeDot={<CustomizedActiveDot />}
+                strokeWidth={2}
+                dot={(props) => <RenderCustomizedDot {...props} dataKey={sensor.column} />}
+                activeDot={{ r: 6, strokeWidth: 2 }}
                 connectNulls={false}
                 name={sensor.name}
-                isAnimationActive={false} // Вимкнути анімацію для кращої продуктивності
+                isAnimationActive={false}
+              />
+            ))}
+            {/* Додаткові точки через Scatter для гарантії */}
+            {activeSensors.map(sensor => (
+              <ColorCodedPoints 
+                key={`scatter-${sensor.column}`}
+                data={chartData} 
+                dataKey={sensor.column} 
+                color={sensor.color}
               />
             ))}
             <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
@@ -340,7 +360,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           </select>
         </div>
 
-        {/* Легенда кольорів */}
         <div className="color-legend">
           <div className="legend-item">
             <div className="legend-color" style={{backgroundColor: '#ef4444'}}></div>
