@@ -7,7 +7,7 @@ import './UserMode.css';
 
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
-  const [timeRange, setTimeRange] = useState('all');
+  const [timeRange, setTimeRange] = useState('7d');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -210,37 +210,28 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         <span className="hamburger-line"></span>
       </button>
 
-      <div className={`controls-panel ${filtersOpen ? 'open' : ''}`}>
-        <div className="controls-group">
-          <label>Період часу:</label>
-          <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
-            <option value="1h">Остання година</option>
-            <option value="6h">6 годин</option>
-            <option value="24h">24 години</option>
-            <option value="7d">7 днів</option>
-            <option value="all">Весь час</option>
-          </select>
-        </div>
-
-        <div className="controls-group">
-          <label>Відображення сенсорів:</label>
-          <div className="sensors-toggle">
-            {sensors.map(sensor => (
-              <label key={sensor.column} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={visibleSensors[sensor.column] !== false}
-                  onChange={(e) => setVisibleSensors(prev => ({
-                    ...prev,
-                    [sensor.column]: e.target.checked
-                  }))}
-                />
-                <span className="sensor-color" style={{ backgroundColor: sensor.color || '#1e3a8a' }}></span>
-                <span className="sensor-name">{sensor.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+      <div className="sensor-controls-panel">
+  <h3>🖲️ Відображення сенсорів</h3>
+  <div className="sensors-toggle">
+    {sensors.map(sensor => (
+      <label key={sensor.column} className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={visibleSensors[sensor.column] !== false}
+          onChange={(e) => setVisibleSensors(prev => ({
+            ...prev,
+            [sensor.column]: e.target.checked
+          }))}
+        />
+        <span 
+          className="sensor-color" 
+          style={{ backgroundColor: sensor.color || '#1e3a8a' }}
+        ></span>
+        <span className="sensor-name">{sensor.name}</span>
+      </label>
+    ))}
+  </div>
+        
       </div>
 
       <div className="chart-section">
