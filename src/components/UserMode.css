@@ -390,6 +390,7 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
 .sensor-controls-panel {
   max-width: 1200px;
   margin: 20px auto 10px auto;
@@ -407,5 +408,55 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 10px 0;
+  padding: 10px;
+}
+
+/* === Мобільні стилі === */
+@media (max-width: 768px) {
+  .chart-section {
+    padding: 0 !important; /* Видаляємо padding зліва і справа */
+    margin: 10px 0 !important;
+  }
+  
+  .chart-container {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 5px !important;
+  }
+  
+  .user-mode {
+    padding: 0 !important;
+  }
+  
+  .actions-panel {
+    padding: 0 10px !important;
+  }
+  
+  .controls-panel {
+    width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    min-height: 350px !important;
+  }
+  
+  .btn {
+    min-width: 160px !important;
+    padding: 10px 20px !important;
+  }
+  
+  .header-content {
+    padding: 0 10px !important;
+  }
+  
+  .user-header h1 {
+    font-size: 1.8rem !important;
+  }
 }
