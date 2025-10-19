@@ -11,7 +11,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showSensorsPanel, setShowSensorsPanel] = useState(false);
-  const [hoveredPoint, setHoveredPoint] = useState(null);
 
   const mainMenuRef = useRef(null);
   const periodPanelRef = useRef(null);
@@ -308,8 +307,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <LineChart
               data={chartData}
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-              onMouseMove={(data) => setHoveredPoint(data.activeTooltipIndex)}
-              onMouseLeave={() => setHoveredPoint(null)}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
