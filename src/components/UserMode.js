@@ -107,60 +107,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   };
 
-  // Розрахунок показників поливу
-  const calculateWateringStats = useMemo(() => {
-    if (!chartData || chartData.length === 0) {
-      return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
-    }
-
-    const activeSensorsList = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
-    if (activeSensorsList.length === 0) return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
-
-    // Беремо перший активний датчик для аналізу поливів
-    const mainSensor = activeSensorsList[0];
-    const wateringEvents = [];
-    const intervals = [];
-
-    // Шукаємо події поливу (збільшення вологості більше ніж на 5 одиниць)
-    for (let i = 1; i < chartData.length; i++) {
-      const currentPoint = chartData[i];
-      const previousPoint = chartData[i - 1];
-      
-      const currentValue = currentPoint[mainSensor.column];
-      const previousValue = previousPoint[mainSensor.column];
-
-      if (currentValue !== null && previousValue !== null) {
-        const moistureIncrease = currentValue - previousValue;
-        
-        if (moistureIncrease > 5) {
-          wateringEvents.push({
-            timestamp: currentPoint.timestamp,
-            moistureIncrease: moistureIncrease,
-            value: currentValue
-          });
-
-          // Розраховуємо інтервал між поливами
-          if (wateringEvents.length > 1) {
-            const prevWatering = wateringEvents[wateringEvents.length - 2];
-            const intervalHours = (currentPoint.timestamp - prevWatering.timestamp) / (1000 * 60 * 60);
-            intervals.push(intervalHours);
-          }
-        }
-      }
-    }
-
-    const wateringCount = wateringEvents.length;
-    const averageInterval = intervals.length > 0 
-      ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
-      : 0;
-
-    return {
-      wateringCount,
-      averageInterval: Math.round(averageInterval * 10) / 10, // Округлення до 1 знака після коми
-      wateringEvents
-    };
-  }, [chartData, sensors, visibleSensors]);
-
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
@@ -203,6 +149,73 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
     return processedData;
   }, [data, config, sensors, visibleSensors, timeRange]);
+
+  // Розрахунок показників поливу - ТЕПЕР ПІСЛЯ chartData
+  const calculateWateringStats = useMemo(() => {
+    if (!chartData || chartData.length === 0) {
+      return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
+    }
+
+    const activeSensorsList = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+    if (activeSensorsList.length === 0) return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
+
+    // Беремо перший активний датчик для аналізу поливів
+    const mainSensor = activeSensorsList[0];
+    const wateringEvents = [];
+    const intervals = [];
+
+    console.log('🔍 Аналіз даних для поливів, точок:', chartData.length);
+    console.log('📊 Активний датчик:', mainSensor.name);
+
+    // Шукаємо події поливу (збільшення вологості більше ніж на 5 одиниць)
+    for (let i = 1; i < chartData.length; i++) {
+      const currentPoint = chartData[i];
+      const previousPoint = chartData[i - 1];
+      
+      const currentValue = currentPoint[mainSensor.column];
+      const previousValue = previousPoint[mainSensor.column];
+
+      if (currentValue !== null && previousValue !== null) {
+        const moistureIncrease = currentValue - previousValue;
+        
+        if (moistureIncrease > 5) {
+          wateringEvents.push({
+            timestamp: currentPoint.timestamp,
+            moistureIncrease: moistureIncrease,
+            value: currentValue,
+            time: formatDateForDisplay(currentPoint.timestamp)
+          });
+
+          console.log(`💧 Виявлено полив: +${moistureIncrease.toFixed(1)} одиниць, час: ${formatDateForDisplay(currentPoint.timestamp)}`);
+
+          // Розраховуємо інтервал між поливами
+          if (wateringEvents.length > 1) {
+            const prevWatering = wateringEvents[wateringEvents.length - 2];
+            const intervalHours = (currentPoint.timestamp - prevWatering.timestamp) / (1000 * 60 * 60);
+            intervals.push(intervalHours);
+            console.log(`⏱️ Інтервал між поливами: ${intervalHours.toFixed(1)} год`);
+          }
+        }
+      }
+    }
+
+    const wateringCount = wateringEvents.length;
+    const averageInterval = intervals.length > 0 
+      ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
+      : 0;
+
+    console.log('📈 Підсумки поливів:', {
+      wateringCount,
+      averageInterval,
+      events: wateringEvents.length
+    });
+
+    return {
+      wateringCount,
+      averageInterval: Math.round(averageInterval * 10) / 10, // Округлення до 1 знака після коми
+      wateringEvents
+    };
+  }, [chartData, sensors, visibleSensors]); // Додаємо залежності
 
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
   const lineType = 'monotone';
@@ -491,7 +504,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Закріплена нижня панель з однією сендвіч-кнопкою */}
+      {/* Закріплена нижня панель */}
       <div className="bottom-panel">
         <div className="hamburger-buttons">
           {/* Головна сендвіч-кнопка з меню */}
