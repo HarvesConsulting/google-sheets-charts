@@ -156,7 +156,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
     }
 
-    const activeSensorsList = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+    const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
     if (activeSensorsList.length === 0) return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
 
     // Беремо перший активний датчик для аналізу поливів
