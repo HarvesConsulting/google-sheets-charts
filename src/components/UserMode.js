@@ -1,184 +1,181 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import './UserMode.css';
-import SensorChart from './SensorChart';
-import MainMenuPanel from './MainMenuPanel';
-import PeriodPanel from './PeriodPanel';
-import SensorsPanel from './SensorsPanel';
-import { calculateMoistureForecast } from '../utils/moisturePrediction';
+import React, { useMemo } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  ReferenceLine, ReferenceArea
+} from 'recharts';
 
-const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
-  const [visibleSensors, setVisibleSensors] = useState({});
-  const [timeRange, setTimeRange] = useState('7d');
-  const [showMainMenu, setShowMainMenu] = useState(false);
-  const [showPeriodPanel, setShowPeriodPanel] = useState(false);
-  const [showSensorsPanel, setShowSensorsPanel] = useState(false);
+const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
+  const parseDate = (dateString) => {
+    try {
+      const match = /Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/.exec(dateString);
+      if (match) {
+        const [, year, month, day, hour, minute, second] = match.map(Number);
+        return new Date(year, month, day, hour, minute, second).getTime();
+      }
 
-  const mainMenuRef = useRef(null);
-  const periodPanelRef = useRef(null);
-  const sensorsPanelRef = useRef(null);
-  const mainMenuButtonRef = useRef(null);
+      const parts = dateString.toString().split(' ');
+      if (parts.length >= 2) {
+        const [d, m, y] = parts[0].split('.').map(Number);
+        const [h, min, s = 0] = parts[1].split(':').map(Number);
+        return new Date(y, m - 1, d, h, min, s).getTime();
+      }
 
-  useEffect(() => {
-    const initialVisibility = {};
-    sensors.forEach(sensor => {
-      initialVisibility[sensor.column] = sensor.visible !== false;
+      const parsed = new Date(dateString);
+      return isNaN(parsed.getTime()) ? null : parsed.getTime();
+    } catch {
+      return null;
+    }
+  };
+
+  const formatDate = (ts, full = false) => {
+    const date = new Date(ts);
+    return date.toLocaleDateString('uk-UA', full ? {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    } : {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
     });
-    setVisibleSensors(initialVisibility);
-  }, [sensors]);
+  };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showMainMenu && 
-          mainMenuRef.current && 
-          mainMenuButtonRef.current &&
-          !mainMenuRef.current.contains(event.target) &&
-          !mainMenuButtonRef.current.contains(event.target)) {
-        setShowMainMenu(false);
-      }
-      if (showPeriodPanel && periodPanelRef.current &&
-          !periodPanelRef.current.contains(event.target)) {
-        setShowPeriodPanel(false);
-      }
-      if (showSensorsPanel && sensorsPanelRef.current &&
-          !sensorsPanelRef.current.contains(event.target)) {
-        setShowSensorsPanel(false);
-      }
-    };
+  const chartData = useMemo(() => {
+    if (!data?.length) return [];
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMainMenu, showPeriodPanel, showSensorsPanel]);
+    let result = data.map(row => {
+      const timestamp = parseDate(row[config.xAxis]);
+      if (!timestamp) return null;
 
-  const activeSensor = useMemo(() => sensors.find(s => visibleSensors[s.column] !== false), [sensors, visibleSensors]);
-  const forecast = useMemo(() => {
-    if (!activeSensor || !config.xAxis || !data.length) return null;
-    const sensorData = data.map(row => ({
-      date: row[config.xAxis],
-      value: parseFloat(row[activeSensor.column])
-    })).filter(d => d.date && !isNaN(d.value));
-    return calculateMoistureForecast(sensorData, 18);
-  }, [data, config.xAxis, activeSensor]);
+      const obj = {
+        timestamp,
+        name: row[config.xAxis],
+        displayTime: formatDate(timestamp),
+      };
 
-  if (!data || data.length === 0) {
+      sensors.forEach(s => {
+        if (visibleSensors[s.column] !== false) {
+          // Безпечне звертання до властивостей
+          const val = row[s.column] ? parseFloat(row[s.column]) : null;
+          obj[s.column] = isNaN(val) ? null : val;
+        }
+      });
+
+      return obj;
+    }).filter(Boolean);
+
+    result.sort((a, b) => a.timestamp - b.timestamp);
+
+    if (timeRange !== 'all') {
+      const now = result.at(-1)?.timestamp || Date.now();
+      const ranges = { '1d': 864e5, '7d': 7 * 864e5 };
+      const cutoff = now - (ranges[timeRange] || 0);
+      result = result.filter(d => d.timestamp >= cutoff);
+    }
+
+    return result;
+  }, [data, config, sensors, visibleSensors, timeRange]);
+
+  const activeSensors = sensors.filter(s => visibleSensors[s.column] !== false);
+
+  const getYAxisRange = () => {
+    if (!chartData.length) return { yMin: 0, yMax: 24 };
+    const values = chartData.flatMap(p =>
+      activeSensors.map(s => p[s.column]).filter(v => v !== null)
+    );
+    if (!values.length) return { yMin: 0, yMax: 24 };
+    let min = Math.min(...values);
+    let max = Math.max(...values);
+    const pad = (max - min) * 0.1;
+    return { yMin: Math.max(min - pad, 0), yMax: max + pad };
+  };
+
+  const { yMin, yMax } = getYAxisRange();
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    
     return (
-      <div className="user-mode">
-        <div className="no-data">
-          <div className="no-data-icon">📭</div>
-          <h2>Немає даних для побудови графіка</h2>
-          <p>Перевірте налаштування даних або спробуйте інший період</p>
-          <button onClick={onBackToDeveloper} className="btn btn-primary">
-            🔧 Повернутись до налаштувань
-          </button>
-        </div>
+      <div style={{
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        fontSize: '0.9rem',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+        color: '#000'
+      }}>
+        <div style={{ fontWeight: 600, marginBottom: 6 }}>{formatDate(label, true)}</div>
+        {payload.map((entry, i) => (
+          <div key={i}>
+            <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+          </div>
+        ))}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="user-mode">
-      {/* === Графік === */}
-      <div className="chart-section">
-        <div className="chart-container">
-          <SensorChart
-            data={data}
-            config={config}
-            sensors={sensors}
-            visibleSensors={visibleSensors}
-            timeRange={timeRange}
+    <ResponsiveContainer width="100%" height={500}>
+      <AreaChart
+        data={chartData}
+        margin={{ top: 10, right: 10, bottom: 10, left: 5 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+        <XAxis
+          dataKey="timestamp"
+          tickFormatter={formatDate}
+          stroke="#000"
+          fontSize={10}
+        />
+        <YAxis
+          stroke="#000"
+          domain={[yMin, yMax]}
+          fontSize={10}
+          width={30}
+        />
+
+        <Tooltip content={<CustomTooltip />} />
+
+        <Legend />
+
+        <defs>
+          {activeSensors.map(sensor => (
+            <linearGradient
+              key={sensor.column}
+              id={`colorSensor-${sensor.column}`}
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop offset="0%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.4} />
+              <stop offset="100%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0} />
+            </linearGradient>
+          ))}
+        </defs>
+
+        {/* Reference Zones */}
+        <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
+        <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.3} stroke="none" />
+        <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.2} stroke="none" />
+        <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+        <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+        <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+
+        {activeSensors.map(sensor => (
+          <Area
+            key={sensor.column}
+            type="monotone"
+            dataKey={sensor.column}
+            stroke={sensor.color || '#3b82f6'}
+            strokeWidth={2}
+            fill={`url(#colorSensor-${sensor.column})`}
+            dot={false}
+            activeDot={{ r: 4 }}
+            name={sensor.name}
           />
-          {forecast && (
-            <div className="forecast-info" style={{ marginTop: '16px', fontSize: '0.95rem', textAlign: 'center' }}>
-              <p>
-                Середня швидкість падіння вологості: <strong>{forecast.avgRate.toFixed(2)} %/год</strong><br />
-                Прогноз досягнення 18%: <strong>{forecast.forecastHours} год</strong>
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* === Нижня панель === */}
-      <div className="bottom-panel">
-        <div className="hamburger-buttons">
-          <div className="hamburger-item">
-            <div className="hamburger-button-wrapper">
-              <div
-                ref={mainMenuButtonRef}
-                className="hamburger-toggle main-menu-toggle"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMainMenu(!showMainMenu);
-                  setShowPeriodPanel(false);
-                  setShowSensorsPanel(false);
-                }}
-              >
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-              </div>
-              <span className="hamburger-label">Меню</span>
-            </div>
-          </div>
-
-          {/* === Панелі === */}
-          {showMainMenu && (
-            <div ref={mainMenuRef}>
-              <MainMenuPanel
-                onOpenPeriod={() => {
-                  setShowMainMenu(false);
-                  setShowPeriodPanel(true);
-                }}
-                onOpenSensors={() => {
-                  setShowMainMenu(false);
-                  setShowSensorsPanel(true);
-                }}
-                onBackToSettings={() => {
-                  setShowMainMenu(false);
-                  onBackToDeveloper();
-                }}
-                onBackToHome={() => {
-                  setShowMainMenu(false);
-                  onBackToStart();
-                }}
-              />
-            </div>
-          )}
-
-          {showPeriodPanel && (
-            <div ref={periodPanelRef}>
-              <PeriodPanel
-                timeRange={timeRange}
-                onSetTimeRange={(range) => {
-                  setTimeRange(range);
-                  setShowPeriodPanel(false);
-                }}
-                onBack={() => {
-                  setShowPeriodPanel(false);
-                  setShowMainMenu(true);
-                }}
-              />
-            </div>
-          )}
-
-          {showSensorsPanel && (
-            <div ref={sensorsPanelRef}>
-              <SensorsPanel
-                sensors={sensors}
-                visibleSensors={visibleSensors}
-                onToggleSensor={(col, checked) =>
-                  setVisibleSensors(prev => ({ ...prev, [col]: checked }))
-                }
-                onBack={() => {
-                  setShowSensorsPanel(false);
-                  setShowMainMenu(true);
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+        ))}
+      </AreaChart>
+    </ResponsiveContainer>
   );
 };
 
-export default UserMode;
+export default React.memo(SensorChart);
