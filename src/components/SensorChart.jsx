@@ -93,70 +93,8 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   const { yMin, yMax } = getYAxisRange();
 
-  // Власний тултіп, який не залежить від recharts
-  const CustomTooltip = useCallback(() => {
-    if (!tooltipData || !isTouching) return null;
-
-    const { x, y, payload, label } = tooltipData;
-
-    return (
-      <div style={{
-        position: 'absolute',
-        left: x,
-        top: y - 60,
-        transform: 'translateX(-50%)',
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '10px 14px',
-        fontSize: '0.9rem',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap',
-        zIndex: 999,
-        color: '#000'
-      }}>
-        <div style={{ fontWeight: 600, marginBottom: 6 }}>{formatDate(label, true)}</div>
-        {payload.map((entry, i) => (
-          <div key={i}>
-            <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
-          </div>
-        ))}
-      </div>
-    );
-  }, [tooltipData, isTouching]);
-
-  const handleTouchStart = useCallback((e) => {
-    const now = Date.now();
-    // Запобігаємо подвійним спрацьовуванням
-    if (now - lastTouchTime.current < 100) return;
-    lastTouchTime.current = now;
-
-    setIsTouching(true);
-    findClosestDataPoint(e);
-  }, [chartData, activeSensors]);
-
-  const handleTouchMove = useCallback((e) => {
-    if (!isTouching) return;
-    findClosestDataPoint(e);
-  }, [isTouching, chartData, activeSensors]);
-
-  const handleTouchEnd = useCallback((e) => {
-    setIsTouching(false);
-    setTooltipData(null);
-    
-    // Примусово видаляємо всі активні елементи
-    setTimeout(() => {
-      const activeElements = document.querySelectorAll('.recharts-active-dot, .recharts-tooltip-cursor');
-      activeElements.forEach(el => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      });
-    }, 10);
-  }, []);
-
-  const findClosestDataPoint = useCallback((e) => {
+  // Виносимо findClosestDataPoint окремо, щоб уникнути циклічних залежностей
+  const findClosestDataPoint = useCallback((e, chartData, activeSensors) => {
     if (!chartData.length || !chartContainerRef.current) return;
 
     const container = chartContainerRef.current;
@@ -189,10 +127,40 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       payload,
       label: point.timestamp
     });
-  }, [chartData, activeSensors]);
+  }, []);
+
+  const handleTouchStart = useCallback((e) => {
+    const now = Date.now();
+    // Запобігаємо подвійним спрацьовуванням
+    if (now - lastTouchTime.current < 100) return;
+    lastTouchTime.current = now;
+
+    setIsTouching(true);
+    findClosestDataPoint(e, chartData, activeSensors);
+  }, [chartData, activeSensors, findClosestDataPoint]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isTouching) return;
+    findClosestDataPoint(e, chartData, activeSensors);
+  }, [isTouching, chartData, activeSensors, findClosestDataPoint]);
+
+  const handleTouchEnd = useCallback((e) => {
+    setIsTouching(false);
+    setTooltipData(null);
+    
+    // Примусово видаляємо всі активні елементи
+    setTimeout(() => {
+      const activeElements = document.querySelectorAll('.recharts-active-dot, .recharts-tooltip-cursor');
+      activeElements.forEach(el => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+    }, 10);
+  }, []);
 
   const handleMouseMove = useCallback((e) => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || !chartData.length) return;
     
     const container = chartContainerRef.current;
     const rect = container.getBoundingClientRect();
@@ -225,6 +193,39 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       label: point.timestamp
     });
   }, [chartData, activeSensors]);
+
+  // Власний тултіп, який не залежить від recharts
+  const CustomTooltip = useCallback(() => {
+    if (!tooltipData || !isTouching) return null;
+
+    const { x, y, payload, label } = tooltipData;
+
+    return (
+      <div style={{
+        position: 'absolute',
+        left: x,
+        top: y - 60,
+        transform: 'translateX(-50%)',
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        fontSize: '0.9rem',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+        zIndex: 999,
+        color: '#000'
+      }}>
+        <div style={{ fontWeight: 600, marginBottom: 6 }}>{formatDate(label, true)}</div>
+        {payload.map((entry, i) => (
+          <div key={i}>
+            <strong style={{ color: entry.color }}>{entry.name}:</strong> {entry.value}
+          </div>
+        ))}
+      </div>
+    );
+  }, [tooltipData, isTouching]);
 
   return (
     <div 
