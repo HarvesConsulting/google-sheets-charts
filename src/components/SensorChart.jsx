@@ -40,7 +40,6 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
     });
   };
 
-  // Оптимізація даних для великих наборів
   const chartData = useMemo(() => {
     if (!data?.length) return [];
 
@@ -73,9 +72,8 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       result = result.filter(d => d.timestamp >= cutoff);
     }
 
-    // Додаткова оптимізація: зменшення кількості точок для великих наборів
     if (result.length > 1000) {
-      const step = Math.ceil(result.length / 500); // Макс 500 точок
+      const step = Math.ceil(result.length / 500);
       result = result.filter((_, index) => index % step === 0);
     }
 
@@ -98,22 +96,34 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   const { yMin, yMax } = getYAxisRange();
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload, label, coordinate }) => {
     if (!active || !payload?.length) return null;
-    
+
+    // Визначаємо позицію тултіпа - завжди зверху від курсора/пальця
+    const tooltipStyle = {
+      position: 'absolute',
+      left: coordinate?.x || 0,
+      top: (coordinate?.y || 0) - 70, // Зміщуємо вище від точки
+      transform: 'translateX(-50%)',
+      background: '#fff',
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      padding: '10px 14px',
+      fontSize: '0.9rem',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+      pointerEvents: 'none',
+      whiteSpace: 'nowrap',
+      zIndex: 1000,
+      color: '#000'
+    };
+
+    // Якщо тултіп виходить за верхній край, показуємо його знизу
+    if (coordinate?.y < 100) {
+      tooltipStyle.top = (coordinate?.y || 0) + 20;
+    }
+
     return (
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '10px 14px',
-        fontSize: '0.9rem',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap',
-        zIndex: 1000,
-        color: '#000'
-      }}>
+      <div style={tooltipStyle}>
         <div style={{ fontWeight: 600, marginBottom: 6 }}>{formatDate(label, true)}</div>
         {payload.map((entry, i) => (
           <div key={i}>
@@ -131,13 +141,14 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       style={{ 
         touchAction: 'pan-y pinch-zoom',
         userSelect: 'none',
-        WebkitUserSelect: 'none'
+        WebkitUserSelect: 'none',
+        position: 'relative' // Для коректного позиціонування тултіпа
       }}
     >
       <ResponsiveContainer width="100%" height={500}>
         <LineChart 
           data={chartData} 
-          margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
+          margin={{ top: 20, right: 20, bottom: 10, left: 0 }} // Збільшив top margin для тултіпа
           onMouseEnter={() => setActiveTooltip(true)}
           onMouseLeave={() => setActiveTooltip(false)}
         >
@@ -147,7 +158,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
             tickFormatter={formatDate} 
             stroke="#000" 
             fontSize={10}
-            minTickGap={50} // Зменшення кількості підписів
+            minTickGap={50}
           />
           <YAxis 
             stroke="#000" 
@@ -159,6 +170,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
             content={<CustomTooltip />}
             trigger={activeTooltip ? "hover" : "none"}
             animationDuration={200}
+            position={{ y: -70 }} // Додатково зміщуємо тултіп вгору
           />
           <Legend />
           <defs>
@@ -192,7 +204,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
               dataKey={sensor.column}
               stroke={sensor.color || '#1e3a8a'}
               strokeWidth={2}
-              dot={false} // Вимкнути точки для продуктивності
+              dot={false}
               activeDot={{
                 r: 4,
                 strokeWidth: 2,
@@ -200,7 +212,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
                 fill: '#fff',
               }}
               name={sensor.name}
-              isAnimationActive={false} // Вимкнути анімацію для продуктивності
+              isAnimationActive={false}
               connectNulls={true}
             />
           ))}
