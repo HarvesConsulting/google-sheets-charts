@@ -125,13 +125,15 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
         <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={12} />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
-        {/* Reference Zones */}
-        <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} />
-        <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.2} />
-        <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.2} />
-        <ReferenceLine y={6} stroke="#ff4444" strokeDasharray="5 5" />
-        <ReferenceLine y={18} stroke="#44ff44" strokeDasharray="5 5" />
+        
+        {/* Reference Zones - лише один раз */}
+        <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
+        <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.2} stroke="none" />
+        <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.2} stroke="none" />
+        <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+        <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
         <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+        
         {activeSensors.map(sensor => (
           <Line
             key={sensor.column}
