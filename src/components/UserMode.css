@@ -562,3 +562,82 @@ html, body {
     right: 16px;
   }
 }
+/* Закріплена нижня панель */
+.bottom-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+}
+
+.bottom-hamburger {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.bottom-hamburger:hover {
+  background: #e5e7eb;
+}
+
+.bottom-controls {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.bottom-controls.open {
+  display: flex;
+}
+
+.bottom-controls .btn {
+  min-width: 160px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+}
+
+/* Адаптація для мобільних */
+@media (max-width: 768px) {
+  .bottom-panel {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    min-width: auto;
+  }
+  
+  .bottom-controls {
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .bottom-controls .btn {
+    flex: 1;
+    min-width: auto;
+  }
+}
+
+/* Верхня сендвіч кнопка */
+.top-hamburger {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+}

@@ -9,6 +9,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const [visibleSensors, setVisibleSensors] = useState({});
   const [timeRange, setTimeRange] = useState('7d');
   const [showControls, setShowControls] = useState(false);
+  const [showBottomPanel, setShowBottomPanel] = useState(false);
 
   useEffect(() => {
     const initialVisibility = {};
@@ -181,22 +182,21 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         y1={0} 
         y2={6} 
         fill="#ff4444" 
-        fillOpacity={0.2
-                  } 
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceArea 
         y1={6} 
         y2={18} 
         fill="#ffcc00" 
-        fillOpacity={0.2} 
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceArea 
         y1={18} 
         y2={yMax} 
         fill="#44ff44" 
-        fillOpacity={0.2} 
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
@@ -221,14 +221,14 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      {/* Гамбургер меню */}
-      <div className="hamburger-toggle" onClick={() => setShowControls(!showControls)}>
+      {/* Верхня сендвіч кнопка */}
+      <div className="hamburger-toggle top-hamburger" onClick={() => setShowControls(!showControls)}>
         <div className="hamburger-line"></div>
         <div className="hamburger-line"></div>
         <div className="hamburger-line"></div>
       </div>
 
-      {/* Панель керування */}
+      {/* Панель керування зверху */}
       <div className={`controls-panel ${showControls ? 'open' : ''}`}>
         <div className="controls-group">
           <label>Період даних:</label>
@@ -320,10 +320,18 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Кнопки дій */}
-      <div className="actions-panel">
-        <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
-        <button onClick={onBackToDeveloper} className="btn btn-primary">⚙️ Налаштування</button>
+      {/* Закріплена нижня панель */}
+      <div className="bottom-panel">
+        <div className="bottom-hamburger" onClick={() => setShowBottomPanel(!showBottomPanel)}>
+          <div className="hamburger-line"></div>
+          <div className="hamburger-line"></div>
+          <div className="hamburger-line"></div>
+        </div>
+        
+        <div className={`bottom-controls ${showBottomPanel ? 'open' : ''}`}>
+          <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
+          <button onClick={onBackToDeveloper} className="btn btn-primary">⚙️ Налаштування</button>
+        </div>
       </div>
     </div>
   );
