@@ -8,13 +8,14 @@ import './UserMode.css';
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
   const [timeRange, setTimeRange] = useState('7d');
+  const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showSensorsPanel, setShowSensorsPanel] = useState(false);
-  
+
+  const mainMenuRef = useRef(null);
   const periodPanelRef = useRef(null);
   const sensorsPanelRef = useRef(null);
-  const periodButtonRef = useRef(null);
-  const sensorsButtonRef = useRef(null);
+  const mainMenuButtonRef = useRef(null);
 
   useEffect(() => {
     const initialVisibility = {};
@@ -24,29 +25,36 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     setVisibleSensors(initialVisibility);
   }, [sensors]);
 
-  // Додаємо обробник кліків поза панелями
+  // Обробник кліків поза меню та панелями
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Закриваємо головне меню
+      if (showMainMenu && 
+          mainMenuRef.current && 
+          mainMenuButtonRef.current &&
+          !mainMenuRef.current.contains(event.target) &&
+          !mainMenuButtonRef.current.contains(event.target)) {
+        setShowMainMenu(false);
+      }
+      
+      // Закриваємо панель періоду
       if (showPeriodPanel && 
           periodPanelRef.current && 
-          periodButtonRef.current &&
-          !periodPanelRef.current.contains(event.target) &&
-          !periodButtonRef.current.contains(event.target)) {
+          !periodPanelRef.current.contains(event.target)) {
         setShowPeriodPanel(false);
       }
       
+      // Закриваємо панель датчиків
       if (showSensorsPanel && 
           sensorsPanelRef.current && 
-          sensorsButtonRef.current &&
-          !sensorsPanelRef.current.contains(event.target) &&
-          !sensorsButtonRef.current.contains(event.target)) {
+          !sensorsPanelRef.current.contains(event.target)) {
         setShowSensorsPanel(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showPeriodPanel, showSensorsPanel]);
+  }, [showMainMenu, showPeriodPanel, showSensorsPanel]);
 
   const parseDate = (dateString) => {
     if (!dateString) return null;
@@ -292,18 +300,19 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Закріплена нижня панель з двома сендвіч-кнопками */}
+      {/* Закріплена нижня панель з однією сендвіч-кнопкою */}
       <div className="bottom-panel">
         <div className="hamburger-buttons">
-          {/* Кнопка періоду */}
+          {/* Головна сендвіч-кнопка з меню */}
           <div className="hamburger-item">
             <div className="hamburger-button-wrapper">
               <div 
-                ref={periodButtonRef}
-                className="hamburger-toggle period-toggle" 
+                ref={mainMenuButtonRef}
+                className="hamburger-toggle main-menu-toggle" 
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowPeriodPanel(!showPeriodPanel);
+                  setShowMainMenu(!showMainMenu);
+                  setShowPeriodPanel(false);
                   setShowSensorsPanel(false);
                 }}
               >
@@ -311,43 +320,61 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
                 <div className="hamburger-line"></div>
                 <div className="hamburger-line"></div>
               </div>
-              <span className="hamburger-label">Період</span>
+              <span className="hamburger-label">Меню</span>
             </div>
             
-            {showPeriodPanel && (
-              <div ref={periodPanelRef} className="controls-panel period-panel open">
+            {/* Головне меню */}
+            {showMainMenu && (
+              <div ref={mainMenuRef} className="controls-panel main-menu-panel open">
                 <div className="controls-group">
-                  <label>Період даних:</label>
-                  <div className="time-buttons">
+                  <label>Управління:</label>
+                  <div className="menu-buttons">
                     <button 
-                      className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
+                      className="menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setTimeRange('all');
-                        setShowPeriodPanel(false);
+                        setShowPeriodPanel(true);
+                        setShowMainMenu(false);
                       }}
                     >
-                      Весь період
+                      <span className="menu-icon">📅</span>
+                      <span className="menu-text">Період даних</span>
                     </button>
+                    
                     <button 
-                      className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
+                      className="menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setTimeRange('7d');
-                        setShowPeriodPanel(false);
+                        setShowSensorsPanel(true);
+                        setShowMainMenu(false);
                       }}
                     >
-                      7 днів
+                      <span className="menu-icon">📊</span>
+                      <span className="menu-text">Датчики</span>
                     </button>
+                    
                     <button 
-                      className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
+                      className="menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setTimeRange('1d');
-                        setShowPeriodPanel(false);
+                        onBackToDeveloper();
+                        setShowMainMenu(false);
                       }}
                     >
-                      Добу
+                      <span className="menu-icon">⚙️</span>
+                      <span className="menu-text">Налаштування</span>
+                    </button>
+                    
+                    <button 
+                      className="menu-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onBackToStart();
+                        setShowMainMenu(false);
+                      }}
+                    >
+                      <span className="menu-icon">🏠</span>
+                      <span className="menu-text">На головну</span>
                     </button>
                   </div>
                 </div>
@@ -355,58 +382,99 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             )}
           </div>
 
-          {/* Кнопка датчиків */}
-          <div className="hamburger-item">
-            <div className="hamburger-button-wrapper">
-              <div 
-                ref={sensorsButtonRef}
-                className="hamburger-toggle sensors-toggle-btn" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowSensorsPanel(!showSensorsPanel);
-                  setShowPeriodPanel(false);
-                }}
-              >
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
+          {/* Панель періоду */}
+          {showPeriodPanel && (
+            <div ref={periodPanelRef} className="controls-panel period-panel open">
+              <div className="panel-header">
+                <button 
+                  className="back-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPeriodPanel(false);
+                    setShowMainMenu(true);
+                  }}
+                >
+                  ← Назад
+                </button>
+                <h3>Період даних</h3>
               </div>
-              <span className="hamburger-label">Датчики</span>
-            </div>
-            
-            {showSensorsPanel && (
-              <div ref={sensorsPanelRef} className="controls-panel sensors-panel open">
-                <div className="controls-group">
-                  <label>Вибір датчиків:</label>
-                  <div className="sensors-list">
-                    {sensors.map(sensor => (
-                      <label key={sensor.column} className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={visibleSensors[sensor.column] !== false}
-                          onChange={(e) => setVisibleSensors(prev => ({
-                            ...prev,
-                            [sensor.column]: e.target.checked
-                          }))}
-                        />
-                        <span 
-                          className="sensor-color" 
-                          style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-                        ></span>
-                        <span className="sensor-name">{sensor.name}</span>
-                      </label>
-                    ))}
-                  </div>
+              <div className="controls-group">
+                <div className="time-buttons">
+                  <button 
+                    className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTimeRange('all');
+                      setShowPeriodPanel(false);
+                    }}
+                  >
+                    Весь період
+                  </button>
+                  <button 
+                    className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTimeRange('7d');
+                      setShowPeriodPanel(false);
+                    }}
+                  >
+                    7 днів
+                  </button>
+                  <button 
+                    className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTimeRange('1d');
+                      setShowPeriodPanel(false);
+                    }}
+                  >
+                    Добу
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Кнопки навігації */}
-          <div className="nav-buttons">
-            <button onClick={onBackToStart} className="nav-btn">На головну</button>
-            <button onClick={onBackToDeveloper} className="nav-btn">Налаштування</button>
-          </div>
+          {/* Панель датчиків */}
+          {showSensorsPanel && (
+            <div ref={sensorsPanelRef} className="controls-panel sensors-panel open">
+              <div className="panel-header">
+                <button 
+                  className="back-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSensorsPanel(false);
+                    setShowMainMenu(true);
+                  }}
+                >
+                  ← Назад
+                </button>
+                <h3>Датчики</h3>
+              </div>
+              <div className="controls-group">
+                <label>Вибір датчиків:</label>
+                <div className="sensors-list">
+                  {sensors.map(sensor => (
+                    <label key={sensor.column} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={visibleSensors[sensor.column] !== false}
+                        onChange={(e) => setVisibleSensors(prev => ({
+                          ...prev,
+                          [sensor.column]: e.target.checked
+                        }))}
+                      />
+                      <span 
+                        className="sensor-color" 
+                        style={{ backgroundColor: sensor.color || '#1e3a8a' }}
+                      ></span>
+                      <span className="sensor-name">{sensor.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
