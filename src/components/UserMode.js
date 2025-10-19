@@ -7,7 +7,8 @@ import './UserMode.css';
 
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
-  const [timeRange, setTimeRange] = useState('7d'); // За замовчуванням 7 днів
+  const [timeRange, setTimeRange] = useState('7d');
+  const [showControls, setShowControls] = useState(false);
 
   useEffect(() => {
     const initialVisibility = {};
@@ -100,9 +101,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     if (timeRange !== 'all' && processedData.length > 0) {
       const now = processedData[processedData.length - 1].timestamp;
       const rangeMs = {
-        '1h': 60 * 60 * 1000,
-        '6h': 6 * 60 * 60 * 1000,
-        '24h': 24 * 60 * 60 * 1000,
+        '1d': 24 * 60 * 60 * 1000,
         '7d': 7 * 24 * 60 * 60 * 1000
       }[timeRange];
 
@@ -176,10 +175,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     );
   };
 
-  // ЯСКРАВІ ЗОНИ з більшою насиченістю
   const renderZones = () => (
     <>
-      {/* Червона зона: 0-6 - яскраво червона */}
       <ReferenceArea 
         y1={0} 
         y2={6} 
@@ -187,7 +184,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         fillOpacity={0.4} 
         stroke="none"
       />
-      {/* Жовта зона: 6-18 - яскраво жовта */}
       <ReferenceArea 
         y1={6} 
         y2={18} 
@@ -195,7 +191,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         fillOpacity={0.4} 
         stroke="none"
       />
-      {/* Зелена зона: 18+ - яскраво зелена */}
       <ReferenceArea 
         y1={18} 
         y2={yMax} 
@@ -203,8 +198,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         fillOpacity={0.4} 
         stroke="none"
       />
-      
-      {/* Додаємо межі зон для кращої видимості */}
       <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
       <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
     </>
@@ -227,20 +220,41 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      <div className="controls-panel">
+      {/* Гамбургер меню */}
+      <div className="hamburger-toggle" onClick={() => setShowControls(!showControls)}>
+        <div className="hamburger-line"></div>
+        <div className="hamburger-line"></div>
+        <div className="hamburger-line"></div>
+      </div>
+
+      {/* Панель керування */}
+      <div className={`controls-panel ${showControls ? 'open' : ''}`}>
         <div className="controls-group">
-          <label>Період часу:</label>
-          <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
-            <option value="1h">Остання година</option>
-            <option value="6h">6 годин</option>
-            <option value="24h">24 години</option>
-            <option value="7d">7 днів</option>
-            <option value="all">Весь час</option>
-          </select>
+          <label>Період даних:</label>
+          <div className="time-buttons">
+            <button 
+              className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
+              onClick={() => setTimeRange('all')}
+            >
+              Весь період
+            </button>
+            <button 
+              className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
+              onClick={() => setTimeRange('7d')}
+            >
+              7 днів
+            </button>
+            <button 
+              className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
+              onClick={() => setTimeRange('1d')}
+            >
+              Добу
+            </button>
+          </div>
         </div>
 
         <div className="controls-group">
-          <label>Відображення сенсорів:</label>
+          <label>Вибір датчиків:</label>
           <div className="sensors-toggle">
             {sensors.map(sensor => (
               <label key={sensor.column} className="checkbox-label">
@@ -263,6 +277,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
+      {/* Графік */}
       <div className="chart-section">
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={500}>
@@ -304,8 +319,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Видалено статистику даних */}
-
+      {/* Кнопки дій */}
       <div className="actions-panel">
         <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
         <button onClick={onBackToDeveloper} className="btn btn-primary">⚙️ Налаштування</button>
