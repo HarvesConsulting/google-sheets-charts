@@ -627,3 +627,32 @@ html, body {
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+/* Покращені стилі для графіка */
+.recharts-line-curve {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.recharts-dot:hover {
+  transform: scale(1.3);
+  transition: transform 0.2s ease;
+}
+
+/* Анімація для ліній */
+.recharts-line path {
+  transition: all 0.3s ease;
+}
+
+.recharts-line:hover path {
+  stroke-width: 4;
+}
+
+/* Стилі для кастомного тултіпа */
+.custom-tooltip {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Плавні переходи для точок */
+.recharts-dot {
+  transition: all 0.2s ease;
+}
