@@ -13,7 +13,26 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* === Hamburger Button - ТЕПЕР ПРОСТО КНОПКА НА БІЛОМУ ФОНІ === */
+/* === Reset & Base === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--white);
+  color: var(--text-dark);
+  line-height: 1.5;
+}
+
+.App {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* === Hamburger Button === */
 .hamburger-btn {
   position: fixed;
   top: 16px;
@@ -25,8 +44,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   justify-content: center;
   align-items: center;
   border-radius: 8px;
@@ -62,8 +81,8 @@
 .sidebar {
   position: fixed;
   top: 0;
-  left: -320px;
-  width: 320px;
+  left: -100%;
+  width: 100%;
   height: 100vh;
   background: var(--white);
   box-shadow: var(--shadow-lg);
@@ -84,6 +103,8 @@
   padding: 20px;
   background: var(--white);
   z-index: 1101;
+  width: 100%;
+  max-width: 320px;
 }
 
 .sidebar-overlay {
@@ -109,6 +130,7 @@
   padding-bottom: 20px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--gray-border);
+  text-align: left;
 }
 
 .sidebar-header h2 {
@@ -116,12 +138,14 @@
   font-size: 1.4rem;
   color: var(--primary-dark-blue);
   font-weight: 700;
+  text-align: left;
 }
 
 .sidebar-header p {
   margin: 0;
   color: var(--text-light);
   font-size: 0.9rem;
+  text-align: left;
 }
 
 .sidebar-close {
@@ -153,6 +177,11 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  text-align: left;
+}
+
+.menu-section {
+  text-align: left;
 }
 
 .menu-section h3 {
@@ -160,6 +189,7 @@
   font-size: 1.1rem;
   color: var(--primary-dark-blue);
   font-weight: 600;
+  text-align: left;
 }
 
 .app-description {
@@ -167,6 +197,7 @@
   color: var(--text-light);
   font-size: 0.9rem;
   line-height: 1.5;
+  text-align: left;
 }
 
 /* Instagram Button */
@@ -184,6 +215,7 @@
   transition: all 0.2s ease;
   width: 100%;
   text-align: left;
+  justify-content: flex-start;
 }
 
 .instagram-btn:hover {
@@ -194,13 +226,15 @@
 
 .instagram-icon {
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
-/* Mode Buttons */
+/* Mode Buttons - Вирівняні по лівому краю */
 .mode-buttons {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  text-align: left;
 }
 
 .mode-btn {
@@ -213,12 +247,17 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
+  display: block;
+  width: 100%;
+  margin-left: 0;
+  padding-left: 16px;
 }
 
 .mode-btn:hover {
   background: var(--primary-light-blue);
   color: var(--white);
   border-color: var(--primary-light-blue);
+  padding-left: 20px;
 }
 
 /* === Container === */
@@ -226,7 +265,8 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  padding-top: 60px; /* Додаємо відступ зверху для кнопки */
+  padding-top: 80px;
+  min-height: 100vh;
 }
 
 /* === Responsive Design === */
@@ -234,38 +274,112 @@
   .hamburger-btn {
     top: 12px;
     left: 12px;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
   
-  .sidebar {
-    width: 280px;
-    left: -280px;
-  }
-  
-  .sidebar-content {
-    padding: 16px;
-  }
-  
-  .container {
-    padding: 16px;
-    padding-top: 56px;
-  }
-}
-
-@media (max-width: 480px) {
   .sidebar {
     width: 100%;
     left: -100%;
   }
   
+  .sidebar-content {
+    padding: 16px;
+    max-width: none;
+    width: 100%;
+  }
+  
+  .container {
+    padding: 16px;
+    padding-top: 70px;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .menu-section h3 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
   .hamburger-btn {
-    width: 32px;
-    height: 32px;
+    top: 10px;
+    left: 10px;
+    width: 36px;
+    height: 36px;
   }
   
   .hamburger-btn span {
     width: 18px;
+  }
+  
+  .sidebar-content {
+    padding: 12px;
+  }
+  
+  .container {
+    padding: 12px;
+    padding-top: 60px;
+  }
+  
+  .sidebar-header {
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .sidebar-menu {
+    gap: 20px;
+  }
+  
+  .mode-btn,
+  .instagram-btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* === Small Mobile Devices === */
+@media (max-width: 380px) {
+  .hamburger-btn {
+    width: 32px;
+    height: 32px;
+    padding: 8px;
+  }
+  
+  .hamburger-btn span {
+    width: 16px;
+    height: 1.5px;
+  }
+  
+  .sidebar-content {
+    padding: 10px;
+  }
+  
+  .container {
+    padding: 10px;
+    padding-top: 52px;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .sidebar-header p {
+    font-size: 0.8rem;
+  }
+  
+  .menu-section h3 {
+    font-size: 0.95rem;
+  }
+  
+  .app-description {
+    font-size: 0.85rem;
   }
 }
 
@@ -292,4 +406,81 @@
 .mode-btn:focus-visible {
   outline: 2px solid var(--primary-light-blue);
   outline-offset: 2px;
+}
+
+/* === Scrollbar Styling === */
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: var(--gray-light);
+  border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--gray-border);
+  border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+/* === Touch Device Improvements === */
+@media (hover: none) and (pointer: coarse) {
+  .hamburger-btn:hover {
+    background: var(--white);
+    transform: none;
+  }
+  
+  .mode-btn:hover,
+  .instagram-btn:hover {
+    transform: none;
+    padding-left: 16px;
+  }
+  
+  .hamburger-btn:active,
+  .mode-btn:active,
+  .instagram-btn:active {
+    background: var(--gray-light);
+    transform: scale(0.98);
+  }
+}
+
+/* === Reduced Motion Support === */
+@media (prefers-reduced-motion: reduce) {
+  .hamburger-btn,
+  .sidebar,
+  .sidebar-overlay,
+  .mode-btn,
+  .instagram-btn {
+    transition: none;
+  }
+  
+  .sidebar-content {
+    animation: none;
+  }
+  
+  .hamburger-btn:hover span,
+  .mode-btn:hover,
+  .instagram-btn:hover {
+    transform: none;
+  }
+}
+
+/* === High Contrast Support === */
+@media (prefers-contrast: high) {
+  .hamburger-btn {
+    border-width: 2px;
+  }
+  
+  .mode-btn,
+  .instagram-btn {
+    border-width: 2px;
+  }
+  
+  .sidebar-header {
+    border-bottom-width: 2px;
+  }
 }
