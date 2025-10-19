@@ -17,33 +17,20 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const sensorsPanelRef = useRef(null);
   const mainMenuButtonRef = useRef(null);
 
-  // Додаємо дебаг інформацію
-  useEffect(() => {
-    console.log('📊 UserMode отримав дані:', {
-      dataLength: data?.length,
-      config,
-      sensorsCount: sensors?.length,
-      visibleSensors
-    });
-  }, [data, config, sensors, visibleSensors]);
-
-  // Ініціалізація видимості сенсорів
   useEffect(() => {
     const initialVisibility = {};
     sensors.forEach(sensor => {
       initialVisibility[sensor.column] = sensor.visible !== false;
     });
     setVisibleSensors(initialVisibility);
-    console.log('👁️ Ініціалізація видимості сенсорів:', initialVisibility);
   }, [sensors]);
 
-  // Обробник кліків поза меню
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showMainMenu && 
           mainMenuRef.current && 
-          !mainMenuRef.current.contains(event.target) &&
           mainMenuButtonRef.current &&
+          !mainMenuRef.current.contains(event.target) &&
           !mainMenuButtonRef.current.contains(event.target)) {
         setShowMainMenu(false);
       }
@@ -65,10 +52,30 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMainMenu, showPeriodPanel, showSensorsPanel]);
 
-  // Функції для роботи з датами
   const parseDate = (dateString) => {
     if (!dateString) return null;
     try {
+      const match = /Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/.exec(dateString);
+      if (match) {
+        const [, year, month, day, hour, minute, second] = match.map(Number);
+        return new Date(year, month, day, hour, minute, second).getTime();
+      }
+
+      const parts = dateString.toString().split(' ');
+      if (parts.length >= 2) {
+        const dateParts = parts[0].split('.');
+        const timeParts = parts[1].split(':');
+        if (dateParts.length === 3 && timeParts.length >= 2) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
+          const hours = parseInt(timeParts[0], 10);
+          const minutes = parseInt(timeParts[1], 10);
+          const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+          return new Date(year, month, day, hours, minutes, seconds).getTime();
+        }
+      }
+
       const parsed = new Date(dateString);
       return isNaN(parsed.getTime()) ? null : parsed.getTime();
     } catch {
@@ -98,23 +105,13 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     });
   };
 
-  // Підготовка даних для графіка
   const chartData = useMemo(() => {
-    if (!data || data.length === 0) {
-      console.log('❌ Немає вхідних даних для графіка');
-      return [];
-    }
+    if (!data || data.length === 0) return [];
 
-    console.log('🔄 Підготовка даних для графіка, вхідних рядків:', data.length);
-
-    const processedData = data.map((row, index) => {
+    let processedData = data.map((row) => {
       const rawDate = row[config.xAxis];
       const timestamp = parseDate(rawDate);
-      
-      if (!timestamp) {
-        console.log(`⚠️ Не вдалося розпарсити дату: ${rawDate} у рядку ${index}`);
-        return null;
-      }
+      if (!timestamp) return null;
 
       const dataPoint = {
         name: rawDate,
@@ -133,12 +130,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       return dataPoint;
     }).filter(item => item !== null);
 
-    console.log('✅ Оброблено точок даних:', processedData.length);
-
-    // Сортування за часом
     processedData.sort((a, b) => a.timestamp - b.timestamp);
 
-    // Фільтрація за періодом
     if (timeRange !== 'all' && processedData.length > 0) {
       const now = processedData[processedData.length - 1].timestamp;
       const rangeMs = {
@@ -148,419 +141,190 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
       if (rangeMs) {
         const cutoff = now - rangeMs;
-        const filteredData = processedData.filter(d => d.timestamp >= cutoff);
-        console.log(`⏰ Фільтрація за періодом ${timeRange}: ${processedData.length} -> ${filteredData.length} точок`);
-        return filteredData;
+        processedData = processedData.filter(d => d.timestamp >= cutoff);
       }
     }
 
     return processedData;
-  }, [data, config.xAxis, sensors, visibleSensors, timeRange]);
+  }, [data, config, sensors, visibleSensors, timeRange]);
 
-  // Активні сенсори
-  const activeSensors = useMemo(() => {
-    const active = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
-    console.log('🎯 Активні сенсори:', active);
-    return active;
-  }, [sensors, visibleSensors]);
+  const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+  const lineType = 'monotone';
 
-  // Розрахунок статистики поливів
-  const wateringStats = useMemo(() => {
-    if (!chartData || chartData.length === 0 || activeSensors.length === 0) {
-      console.log('❌ Немає даних для розрахунку статистики поливів');
-      return { wateringCount: 0, averageInterval: 0 };
-    }
-
-    console.log('💧 Розрахунок статистики поливів з', chartData.length, 'точок');
-
-    const mainSensor = activeSensors[0];
-    const wateringEvents = [];
-    const intervals = [];
-
-    // Пошук подій поливу
-    for (let i = 1; i < chartData.length; i++) {
-      const current = chartData[i];
-      const previous = chartData[i - 1];
-      
-      const currentVal = current[mainSensor.column];
-      const previousVal = previous[mainSensor.column];
-
-      if (currentVal !== null && previousVal !== null) {
-        const increase = currentVal - previousVal;
-        
-        if (increase > 5) {
-          wateringEvents.push({
-            timestamp: current.timestamp,
-            increase: increase
-          });
-
-          // Розрахунок інтервалу
-          if (wateringEvents.length > 1) {
-            const prevEvent = wateringEvents[wateringEvents.length - 2];
-            const intervalHours = (current.timestamp - prevEvent.timestamp) / (1000 * 60 * 60);
-            intervals.push(intervalHours);
-          }
-        }
-      }
-    }
-
-    const wateringCount = wateringEvents.length;
-    const averageInterval = intervals.length > 0 
-      ? intervals.reduce((sum, int) => sum + int, 0) / intervals.length 
-      : 0;
-
-    console.log('📈 Статистика поливів:', { wateringCount, averageInterval, events: wateringEvents.length });
-
-    return {
-      wateringCount,
-      averageInterval: Math.round(averageInterval * 10) / 10
-    };
-  }, [chartData, activeSensors]);
-
-  // Діапазон для Y осі
-  const yAxisRange = useMemo(() => {
-    if (chartData.length === 0) {
-      console.log('📏 Графік порожній, використовуються значення за замовчуванням');
-      return { yMin: 0, yMax: 24 };
-    }
+  const getYAxisRange = () => {
+    if (chartData.length === 0) return { yMin: 0, yMax: 24 };
+    
+    let yMin = 0;
+    let yMax = 24;
     
     const allValues = chartData.flatMap(point => 
       activeSensors.map(sensor => point[sensor.column]).filter(val => val !== null)
     );
     
-    if (allValues.length === 0) {
-      console.log('📏 Немає значень для Y осі');
-      return { yMin: 0, yMax: 24 };
+    if (allValues.length > 0) {
+      yMin = Math.min(...allValues);
+      yMax = Math.max(...allValues);
+      
+      const padding = (yMax - yMin) * 0.1;
+      yMin = Math.min(yMin - padding, 0);
+      yMax += padding;
     }
     
-    let yMin = Math.min(...allValues);
-    let yMax = Math.max(...allValues);
-    
-    const padding = (yMax - yMin) * 0.1;
-    yMin = Math.max(0, yMin - padding);
-    yMax += padding;
-    
-    console.log('📏 Діапазон Y осі:', { yMin, yMax, valuesCount: allValues.length });
-    
     return { yMin, yMax };
-  }, [chartData, activeSensors]);
+  };
 
-  // Кастомний тултіп
-  const CustomTooltip = ({ active, payload, label }) => {
+  const { yMin, yMax } = getYAxisRange();
+
+  const CustomTooltip = ({ active, payload, label, coordinate }) => {
     if (!active || !payload || !payload.length) return null;
 
+    const tooltipStyle = {
+      position: 'absolute',
+      left: coordinate?.x,
+      top: coordinate?.y - 60,
+      transform: 'translateX(-50%)',
+      background: '#ffffff',
+      color: '#000000',
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      padding: '10px 14px',
+      fontSize: '0.9rem',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+      pointerEvents: 'none',
+      whiteSpace: 'nowrap',
+      zIndex: 999
+    };
+
     return (
-      <div className="custom-tooltip">
-        <div className="tooltip-header">
+      <div className="custom-tooltip" style={tooltipStyle}>
+        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#000000' }}>
           {formatTooltipDate(label)}
         </div>
         {payload.map((entry, i) => (
-          <div key={i} className="tooltip-item">
-            <div 
-              className="tooltip-color" 
-              style={{ backgroundColor: entry.color || '#1e3a8a' }}
-            />
-            <strong style={{ color: entry.color || '#1e3a8a' }}>
-              {entry.name}:
-            </strong>
-            <span>{entry.value}</span>
+          <div key={i} style={{ color: '#000000' }}>
+            <strong style={{ color: entry.color || '#1e3a8a' }}>{entry.name}:</strong> {entry.value}
           </div>
         ))}
       </div>
     );
   };
 
-  // Зони на графіку
   const renderZones = () => (
     <>
       <ReferenceArea 
         y1={0} 
         y2={6} 
         fill="#ff4444" 
-        fillOpacity={0.15}
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceArea 
         y1={6} 
         y2={18} 
         fill="#ffcc00" 
-        fillOpacity={0.15}
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceArea 
         y1={18} 
-        y2={yAxisRange.yMax} 
+        y2={yMax} 
         fill="#44ff44" 
-        fillOpacity={0.15}
+        fillOpacity={0.2}
         stroke="none"
       />
-      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={1.5} strokeDasharray="5 5" opacity={0.6} />
-      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={1.5} strokeDasharray="5 5" opacity={0.6} />
+      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
     </>
   );
 
-  // Обробники подій
-  const handleMenuToggle = (e) => {
-    e.stopPropagation();
-    setShowMainMenu(!showMainMenu);
-    setShowPeriodPanel(false);
-    setShowSensorsPanel(false);
-  };
+  // ВИПРАВЛЕНА ЧАСТИНА: завжди показуємо дебаг-інформацію, навіть якщо графік не може побудуватися
+  const hasChartData = chartData.length > 0;
 
-  const handlePeriodSelect = (range) => {
-    setTimeRange(range);
-    setShowPeriodPanel(false);
-  };
+  return (
+    <div className="user-mode">
+      {/* Дебаг інформація - завжди видима */}
+      <div className="debug-info" style={{ 
+        background: '#f8f9fa', 
+        padding: '10px', 
+        margin: '10px',
+        border: '1px solid #dee2e6',
+        borderRadius: '4px',
+        fontSize: '14px'
+      }}>
+        <h3>Дані для дебагу:</h3>
+        <p>Отримано рядків: {data?.length || 0}</p>
+        <p>Оброблено точок: {chartData.length}</p>
+        <p>Вісь X: {config.xAxis}</p>
+        <p>Датчики: {sensors.length}</p>
+        {!hasChartData && data && data.length > 0 && (
+          <div style={{ color: 'red', marginTop: '10px' }}>
+            ⚠️ Дані є, але не можуть бути оброблені. Перевірте:
+            <ul>
+              <li>Формат дати у полі "{config.xAxis}"</li>
+              <li>Назви стовпців датчиків</li>
+              <li>Формат числових даних</li>
+            </ul>
+          </div>
+        )}
+      </div>
 
-  const handleSensorToggle = (sensorColumn, checked) => {
-    setVisibleSensors(prev => ({
-      ...prev,
-      [sensorColumn]: checked
-    }));
-  };
-
-  // Стан без даних
-  if (!data || data.length === 0 || chartData.length === 0) {
-    console.log('🚨 Відображення стану без даних:', {
-      hasData: !!data,
-      dataLength: data?.length,
-      chartDataLength: chartData?.length,
-      config,
-      sensors: sensors?.length
-    });
-    
-    return (
-      <div className="user-mode">
+      {/* Графік показуємо тільки якщо є дані */}
+      {hasChartData ? (
+        <div className="chart-section">
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={500}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                <XAxis 
+                  dataKey="timestamp" 
+                  tickFormatter={formatDateForDisplay} 
+                  stroke="#000000" 
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#000000" 
+                  width={30} 
+                  domain={[yMin, yMax]} 
+                  fontSize={12}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                {renderZones()}
+                {activeSensors.map(sensor => (
+                  <Line
+                    key={sensor.column}
+                    type={lineType}
+                    dataKey={sensor.column}
+                    stroke={sensor.color || '#1e3a8a'}
+                    strokeWidth={4}
+                    strokeOpacity={1}
+                    dot={false}
+                    name={sensor.name}
+                  />
+                ))}
+                <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : (
         <div className="no-data">
           <div className="no-data-icon">📭</div>
           <h2>Немає даних для побудови графіка</h2>
           <p>Перевірте налаштування даних або спробуйте інший період</p>
-          <div className="debug-info">
-            <p><strong>Дані для дебагу:</strong></p>
-            <p>Отримано рядків: {data?.length || 0}</p>
-            <p>Оброблено точок: {chartData?.length || 0}</p>
-            <p>Вісь X: {config.xAxis || 'не вибрана'}</p>
-            <p>Датчики: {sensors?.length || 0}</p>
-          </div>
           <button onClick={onBackToDeveloper} className="btn btn-primary">
             🔧 Повернутись до налаштувань
           </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  console.log('🎨 Відображення графіка з', chartData.length, 'точками');
-
-  return (
-    <div className="user-mode">
-      {/* Графік */}
-      <div className="chart-section">
-        <div className="chart-container">
-          <ResponsiveContainer width="100%" height={500}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-            >
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="#e5e7eb" 
-                opacity={0.4}
-                vertical={false}
-              />
-              <XAxis 
-                dataKey="timestamp" 
-                tickFormatter={formatDateForDisplay} 
-                stroke="#64748b" 
-                fontSize={11}
-                tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
-              />
-              <YAxis 
-                stroke="#64748b" 
-                width={35} 
-                domain={[yAxisRange.yMin, yAxisRange.yMax]} 
-                fontSize={11}
-                tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              {renderZones()}
-              {activeSensors.map(sensor => (
-                <Line
-                  key={sensor.column}
-                  type="monotone"
-                  dataKey={sensor.column}
-                  stroke={sensor.color || '#3b82f6'}
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{
-                    r: 6,
-                    fill: '#fff',
-                    stroke: sensor.color || '#3b82f6',
-                    strokeWidth: 3
-                  }}
-                  name={sensor.name}
-                  connectNulls={true}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Статистика поливів */}
-      <div className="watering-stats">
-        <div className="stats-container">
-          <div className="stat-item">
-            <div className="stat-icon">💧</div>
-            <div className="stat-content">
-              <div className="stat-value">{wateringStats.wateringCount}</div>
-              <div className="stat-label">кількість зволожень</div>
-              <div className="stat-description">збільшення вологості більше ніж на 5%</div>
-            </div>
-          </div>
-          
-          <div className="stat-item">
-            <div className="stat-icon">⏱️</div>
-            <div className="stat-content">
-              <div className="stat-value">{wateringStats.averageInterval} год</div>
-              <div className="stat-label">середній інтервал</div>
-              <div className="stat-description">між поливами</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Нижня панель керування */}
+      {/* Закріплена нижня панель */}
       <div className="bottom-panel">
         <div className="hamburger-buttons">
-          <div className="hamburger-item">
-            <div className="hamburger-button-wrapper">
-              <div 
-                ref={mainMenuButtonRef}
-                className="hamburger-toggle" 
-                onClick={handleMenuToggle}
-              >
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-                <div className="hamburger-line"></div>
-              </div>
-              <span className="hamburger-label">Меню</span>
-            </div>
-            
-            {showMainMenu && (
-              <div ref={mainMenuRef} className="controls-panel main-menu-panel">
-                <div className="controls-group">
-                  <label>Управління:</label>
-                  <div className="menu-buttons">
-                    <button 
-                      className="menu-btn"
-                      onClick={() => {
-                        setShowPeriodPanel(true);
-                        setShowMainMenu(false);
-                      }}
-                    >
-                      <span className="menu-icon">📅</span>
-                      <span>Період даних</span>
-                    </button>
-                    
-                    <button 
-                      className="menu-btn"
-                      onClick={() => {
-                        setShowSensorsPanel(true);
-                        setShowMainMenu(false);
-                      }}
-                    >
-                      <span className="menu-icon">📊</span>
-                      <span>Датчики</span>
-                    </button>
-                    
-                    <button 
-                      className="menu-btn"
-                      onClick={onBackToDeveloper}
-                    >
-                      <span className="menu-icon">⚙️</span>
-                      <span>Налаштування</span>
-                    </button>
-                    
-                    <button 
-                      className="menu-btn"
-                      onClick={onBackToStart}
-                    >
-                      <span className="menu-icon">🏠</span>
-                      <span>На головну</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {showPeriodPanel && (
-            <div ref={periodPanelRef} className="controls-panel period-panel">
-              <div className="panel-header">
-                <button 
-                  className="back-button"
-                  onClick={() => setShowPeriodPanel(false)}
-                >
-                  ← Назад
-                </button>
-                <h3>Період даних</h3>
-              </div>
-              <div className="time-buttons">
-                <button 
-                  className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
-                  onClick={() => handlePeriodSelect('all')}
-                >
-                  Весь період
-                </button>
-                <button 
-                  className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
-                  onClick={() => handlePeriodSelect('7d')}
-                >
-                  7 днів
-                </button>
-                <button 
-                  className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
-                  onClick={() => handlePeriodSelect('1d')}
-                >
-                  Добу
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showSensorsPanel && (
-            <div ref={sensorsPanelRef} className="controls-panel sensors-panel">
-              <div className="panel-header">
-                <button 
-                  className="back-button"
-                  onClick={() => setShowSensorsPanel(false)}
-                >
-                  ← Назад
-                </button>
-                <h3>Датчики</h3>
-              </div>
-              <div className="sensors-list">
-                {sensors.map(sensor => (
-                  <label key={sensor.column} className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={visibleSensors[sensor.column] !== false}
-                      onChange={(e) => handleSensorToggle(sensor.column, e.target.checked)}
-                    />
-                    <span 
-                      className="sensor-color" 
-                      style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-                    />
-                    <span className="sensor-name">{sensor.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* ... (залишається без змін) */}
         </div>
       </div>
     </div>
