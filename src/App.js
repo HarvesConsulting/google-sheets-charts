@@ -56,7 +56,7 @@ function App() {
 
   // Фікс для iOS - примусово перемалювати компонент
   const forceReflow = (element) => {
-    element.offsetHeight;
+    return element.offsetHeight; // Додаємо return
   };
 
   const handleOpenSidebar = () => {
