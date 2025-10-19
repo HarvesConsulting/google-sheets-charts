@@ -1,12 +1,14 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ReferenceLine, ReferenceArea
 } from 'recharts';
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
+  const [tooltipData, setTooltipData] = useState(null);
   const [isTouching, setIsTouching] = useState(false);
-  const chartRef = useRef(null);
+  const chartContainerRef = useRef(null);
+  const lastTouchTime = useRef(0);
 
   const parseDate = (dateString) => {
     try {
@@ -91,17 +93,17 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   const { yMin, yMax } = getYAxisRange();
 
-  const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    // Показуємо тултіп тільки якщо активний І ми торкаємось
-    const shouldShow = active && isTouching;
-    
-    if (!shouldShow || !payload?.length) return null;
-    
+  // Власний тултіп, який не залежить від recharts
+  const CustomTooltip = useCallback(() => {
+    if (!tooltipData || !isTouching) return null;
+
+    const { x, y, payload, label } = tooltipData;
+
     return (
       <div style={{
         position: 'absolute',
-        left: coordinate?.x,
-        top: coordinate?.y - 60,
+        left: x,
+        top: y - 60,
         transform: 'translateX(-50%)',
         background: '#fff',
         border: '1px solid #e5e7eb',
@@ -122,55 +124,127 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
         ))}
       </div>
     );
-  };
+  }, [tooltipData, isTouching]);
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = useCallback((e) => {
+    const now = Date.now();
+    // Запобігаємо подвійним спрацьовуванням
+    if (now - lastTouchTime.current < 100) return;
+    lastTouchTime.current = now;
+
     setIsTouching(true);
-    // Запобігаємо всплиттю події, щоб recharts міг її обробити
-    e.stopPropagation();
-  };
+    findClosestDataPoint(e);
+  }, [chartData, activeSensors]);
 
-  const handleTouchEnd = (e) => {
+  const handleTouchMove = useCallback((e) => {
+    if (!isTouching) return;
+    findClosestDataPoint(e);
+  }, [isTouching, chartData, activeSensors]);
+
+  const handleTouchEnd = useCallback((e) => {
     setIsTouching(false);
+    setTooltipData(null);
     
-    // Скидаємо активну точку через невелику затримку
+    // Примусово видаляємо всі активні елементи
     setTimeout(() => {
-      // Знаходимо всі активні елементи графіка і скидаємо їх стан
-      const activeElements = document.querySelectorAll('.recharts-active-dot');
+      const activeElements = document.querySelectorAll('.recharts-active-dot, .recharts-tooltip-cursor');
       activeElements.forEach(el => {
-        el.classList.remove('recharts-active-dot');
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
       });
-      
-      // Також скидаємо активні лінії
-      const activeShapes = document.querySelectorAll('.recharts-active-shape');
-      activeShapes.forEach(el => {
-        el.classList.remove('recharts-active-shape');
-      });
-    }, 50);
-    
-    e.stopPropagation();
-  };
+    }, 10);
+  }, []);
 
-  const handleTouchMove = (e) => {
-    // Дозволяємо нормальний скролл, але все одно показуємо тултіп
-    e.stopPropagation();
-  };
+  const findClosestDataPoint = useCallback((e) => {
+    if (!chartData.length || !chartContainerRef.current) return;
+
+    const container = chartContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    
+    // Знаходимо найближчу точку даних по X координаті
+    const xPercentage = touchX / rect.width;
+    const dataIndex = Math.min(
+      Math.max(0, Math.round(xPercentage * (chartData.length - 1))),
+      chartData.length - 1
+    );
+
+    const point = chartData[dataIndex];
+    if (!point) return;
+
+    // Створюємо payload для тултіпа
+    const payload = activeSensors.map(sensor => ({
+      name: sensor.name,
+      value: point[sensor.column],
+      color: sensor.color || '#3b82f6',
+      dataKey: sensor.column
+    })).filter(entry => entry.value !== null);
+
+    if (payload.length === 0) return;
+
+    setTooltipData({
+      x: touchX,
+      y: e.touches[0].clientY - rect.top,
+      payload,
+      label: point.timestamp
+    });
+  }, [chartData, activeSensors]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!chartContainerRef.current) return;
+    
+    const container = chartContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Знаходимо найближчу точку даних по X координаті
+    const xPercentage = mouseX / rect.width;
+    const dataIndex = Math.min(
+      Math.max(0, Math.round(xPercentage * (chartData.length - 1))),
+      chartData.length - 1
+    );
+
+    const point = chartData[dataIndex];
+    if (!point) return;
+
+    const payload = activeSensors.map(sensor => ({
+      name: sensor.name,
+      value: point[sensor.column],
+      color: sensor.color || '#3b82f6',
+      dataKey: sensor.column
+    })).filter(entry => entry.value !== null);
+
+    if (payload.length === 0) return;
+
+    setTooltipData({
+      x: mouseX,
+      y: mouseY,
+      payload,
+      label: point.timestamp
+    });
+  }, [chartData, activeSensors]);
 
   return (
-    <div
+    <div 
+      ref={chartContainerRef}
+      style={{ position: 'relative', touchAction: 'pan-y' }}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
-      onTouchMove={handleTouchMove}
-      style={{ touchAction: 'pan-y' }}
+      onMouseEnter={() => setIsTouching(true)}
+      onMouseLeave={() => {
+        setIsTouching(false);
+        setTooltipData(null);
+      }}
+      onMouseMove={handleMouseMove}
     >
       <ResponsiveContainer width="100%" height={500}>
         <AreaChart
           data={chartData}
           margin={{ top: 10, right: 10, bottom: 10, left: 5 }}
-          onMouseEnter={() => setIsTouching(true)}
-          onMouseLeave={() => setIsTouching(false)}
-          ref={chartRef}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
           <XAxis
@@ -186,12 +260,8 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
             width={30}
           />
 
-          <Tooltip
-            content={<CustomTooltip />}
-            allowEscapeViewBox={{ x: true, y: true }}
-            wrapperStyle={{ pointerEvents: 'none' }}
-            isAnimationActive={false} // Вимкнути анімацію для кращої продуктивності
-          />
+          {/* Пустий тултіп для відключення стандартної поведінки */}
+          <Tooltip content={() => null} />
 
           <Legend />
 
@@ -228,12 +298,15 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
               strokeWidth={2}
               fill={`url(#colorSensor-${sensor.column})`}
               dot={false}
-              activeDot={false} // Вимкнути стандартні активні точки
+              activeDot={false} // Повністю вимикаємо стандартні точки
               name={sensor.name}
             />
           ))}
         </AreaChart>
       </ResponsiveContainer>
+      
+      {/* Власний тултіп, який ми повністю контролюємо */}
+      <CustomTooltip />
     </div>
   );
 };
