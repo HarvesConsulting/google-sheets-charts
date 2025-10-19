@@ -26,7 +26,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     setVisibleSensors(initialVisibility);
   }, [sensors]);
 
-  // Обробник кліків поза меню та панелями
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showMainMenu && 
@@ -150,24 +149,18 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     return processedData;
   }, [data, config, sensors, visibleSensors, timeRange]);
 
-  // Розрахунок показників поливу - ТЕПЕР ПІСЛЯ chartData
   const calculateWateringStats = useMemo(() => {
     if (!chartData || chartData.length === 0) {
       return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
     }
 
-    const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+    const activeSensorsList = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
     if (activeSensorsList.length === 0) return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
 
-    // Беремо перший активний датчик для аналізу поливів
     const mainSensor = activeSensorsList[0];
     const wateringEvents = [];
     const intervals = [];
 
-    console.log('🔍 Аналіз даних для поливів, точок:', chartData.length);
-    console.log('📊 Активний датчик:', mainSensor.name);
-
-    // Шукаємо події поливу (збільшення вологості більше ніж на 5 одиниць)
     for (let i = 1; i < chartData.length; i++) {
       const currentPoint = chartData[i];
       const previousPoint = chartData[i - 1];
@@ -186,14 +179,10 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             time: formatDateForDisplay(currentPoint.timestamp)
           });
 
-          console.log(`💧 Виявлено полив: +${moistureIncrease.toFixed(1)} одиниць, час: ${formatDateForDisplay(currentPoint.timestamp)}`);
-
-          // Розраховуємо інтервал між поливами
           if (wateringEvents.length > 1) {
             const prevWatering = wateringEvents[wateringEvents.length - 2];
             const intervalHours = (currentPoint.timestamp - prevWatering.timestamp) / (1000 * 60 * 60);
             intervals.push(intervalHours);
-            console.log(`⏱️ Інтервал між поливами: ${intervalHours.toFixed(1)} год`);
           }
         }
       }
@@ -204,21 +193,14 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
       : 0;
 
-    console.log('📈 Підсумки поливів:', {
-      wateringCount,
-      averageInterval,
-      events: wateringEvents.length
-    });
-
     return {
       wateringCount,
-      averageInterval: Math.round(averageInterval * 10) / 10, // Округлення до 1 знака після коми
+      averageInterval: Math.round(averageInterval * 10) / 10,
       wateringEvents
     };
-  }, [chartData, sensors, visibleSensors]); // Додаємо залежності
+  }, [chartData, sensors, visibleSensors]);
 
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
-  const lineType = 'monotone';
 
   const getYAxisRange = () => {
     if (chartData.length === 0) return { yMin: 0, yMax: 24 };
@@ -244,7 +226,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   const { yMin, yMax } = getYAxisRange();
 
-  // Кастомна точка для графіка
   const CustomDot = (props) => {
     const { cx, cy, value, index } = props;
     const isHovered = hoveredPoint === index;
@@ -253,7 +234,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
     return (
       <g>
-        {/* Зовнішнє кільце при наведенні */}
         {isHovered && (
           <circle
             cx={cx}
@@ -265,7 +245,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             strokeOpacity={0.3}
           />
         )}
-        {/* Основна точка */}
         <circle
           cx={cx}
           cy={cy}
@@ -275,7 +254,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
           strokeWidth={isHovered ? 3 : 2}
           style={{ transition: 'all 0.2s ease' }}
         />
-        {/* Внутрішня точка */}
         <circle
           cx={cx}
           cy={cy}
@@ -392,7 +370,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      {/* Графік */}
       <div className="chart-section">
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={500}>
@@ -403,7 +380,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               onMouseLeave={() => setHoveredPoint(null)}
             >
               <defs>
-                {/* Градієнти для ліній */}
                 {activeSensors.map(sensor => (
                   <linearGradient 
                     key={`gradient-${sensor.column}`} 
@@ -481,7 +457,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Показники поливу */}
       <div className="watering-stats">
         <div className="stats-container">
           <div className="stat-item">
@@ -504,10 +479,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Закріплена нижня панель */}
       <div className="bottom-panel">
         <div className="hamburger-buttons">
-          {/* Головна сендвіч-кнопка з меню */}
           <div className="hamburger-item">
             <div className="hamburger-button-wrapper">
               <div 
@@ -527,7 +500,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               <span className="hamburger-label">Меню</span>
             </div>
             
-            {/* Головне меню */}
             {showMainMenu && (
               <div ref={mainMenuRef} className="controls-panel main-menu-panel open">
                 <div className="controls-group">
@@ -586,7 +558,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             )}
           </div>
 
-          {/* Панель періоду */}
           {showPeriodPanel && (
             <div ref={periodPanelRef} className="controls-panel period-panel open">
               <div className="panel-header">
@@ -639,7 +610,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             </div>
           )}
 
-          {/* Панель датчиків */}
           {showSensorsPanel && (
             <div ref={sensorsPanelRef} className="controls-panel sensors-panel open">
               <div className="panel-header">
