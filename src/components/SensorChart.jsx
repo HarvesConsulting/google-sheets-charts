@@ -136,8 +136,8 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
           onMouseLeave={() => setIsTouching(false)}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-          <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={12} />
-          <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={12} />
+          <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={10} />
+          <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} width={30} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           <defs>
