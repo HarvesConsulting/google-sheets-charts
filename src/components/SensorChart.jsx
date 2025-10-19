@@ -1,12 +1,13 @@
 // SensorChart.jsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
   ReferenceLine, ReferenceArea
 } from 'recharts';
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
-  const [isTouching, setIsTouching] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const chartRef = useRef(null);
 
   const parseDate = (dateString) => {
     try {
@@ -91,15 +92,11 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   const { yMin, yMax } = getYAxisRange();
 
-  const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload?.length || !isTouching) return null;
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length || !activeTooltip) return null;
     
     return (
       <div style={{
-        position: 'absolute',
-        left: coordinate?.x,
-        top: coordinate?.y - 60,
-        transform: 'translateX(-50%)',
         background: '#fff',
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
@@ -121,31 +118,67 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
     );
   };
 
+  const handleTouchStart = (e) => {
+    setActiveTooltip(true);
+  };
+
+  const handleTouchEnd = (e) => {
+    // Затримка перед схованням тултіпа для кращого UX
+    setTimeout(() => setActiveTooltip(false), 1500);
+  };
+
   return (
     <div 
-      onTouchStart={() => setIsTouching(true)}
-      onTouchEnd={() => setIsTouching(false)}
-      onTouchCancel={() => setIsTouching(false)}
-      style={{ touchAction: 'pan-y' }}
+      ref={chartRef}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      style={{ 
+        touchAction: 'none', // Вимкнути стандартні жести для кращого контролю
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
+      }}
     >
       <ResponsiveContainer width="100%" height={500}>
         <LineChart 
           data={chartData} 
           margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
-          onMouseEnter={() => setIsTouching(true)}
-          onMouseLeave={() => setIsTouching(false)}
+          onMouseEnter={() => setActiveTooltip(true)}
+          onMouseLeave={() => setActiveTooltip(false)}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-          <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={10} />
-          <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} width={30} />
-          <Tooltip content={<CustomTooltip />} />
+          <XAxis 
+            dataKey="timestamp" 
+            tickFormatter={formatDate} 
+            stroke="#000" 
+            fontSize={10} 
+          />
+          <YAxis 
+            stroke="#000" 
+            domain={[yMin, yMax]} 
+            fontSize={10} 
+            width={30} 
+          />
+          <Tooltip 
+            content={<CustomTooltip />}
+            trigger="click"
+            wrapperStyle={{ zIndex: 1000 }}
+          />
           <Legend />
           <defs>
-    <linearGradient id="colorSensor" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-    </linearGradient>
-  </defs>
+            {activeSensors.map(sensor => (
+              <linearGradient 
+                key={`gradient-${sensor.column}`}
+                id={`gradient-${sensor.column}`} 
+                x1="0" 
+                y1="0" 
+                x2="0" 
+                y2="1"
+              >
+                <stop offset="0%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.4} />
+                <stop offset="100%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
           
           {/* Reference Zones */}
           <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
@@ -157,14 +190,20 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
           
           {activeSensors.map(sensor => (
             <Line
-               key={sensor.column}
-      type="monotone"
-      dataKey={sensor.column}
-      stroke={sensor.color || '#1e3a8a'}
-      strokeWidth={2}
-      dot={false}
-      name={sensor.name}
-      fill={`url(#gradient-${sensor.column})`}
+              key={sensor.column}
+              type="monotone"
+              dataKey={sensor.column}
+              stroke={sensor.color || '#1e3a8a'}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ 
+                r: 6, 
+                strokeWidth: 2,
+                stroke: sensor.color || '#1e3a8a',
+                fill: '#fff',
+                onTouchStart: () => setActiveTooltip(true)
+              }}
+              name={sensor.name}
             />
           ))}
         </LineChart>
