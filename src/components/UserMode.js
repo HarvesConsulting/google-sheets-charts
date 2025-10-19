@@ -213,37 +213,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     );
   };
 
-  // Додайте в компонент
-const AnimatedGradientLine = ({ dataKey, color, isActive }) => {
-  return (
-    <>
-      <defs>
-        <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.8}/>
-          <stop offset="100%" stopColor={color} stopOpacity={0.1}/>
-        </linearGradient>
-      </defs>
-      <Line
-        type="monotone"
-        dataKey={dataKey}
-        stroke={`url(#gradient-${dataKey})`}
-        strokeWidth={4}
-        strokeLinecap="round"
-        dot={false}
-        activeDot={{
-          r: 6,
-          fill: color,
-          stroke: "#fff",
-          strokeWidth: 2
-        }}
-        name={sensors.find(s => s.column === dataKey)?.name}
-        isAnimationActive={true}
-        animationDuration={1000}
-        animationEasing="ease-out"
-      />
-    </>
-  );
-};
+  
 
   const renderZones = () => (
     <>
