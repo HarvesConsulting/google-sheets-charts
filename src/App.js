@@ -1,96 +1,64 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
-import DeveloperMode from './components/DeveloperMode';
-import UserMode from './components/UserMode';
-import StartScreen from './components/StartScreen';
 import './App.css';
+
+// Ліниве завантаження компонентів для кращої швидкості
+const StartScreen = lazy(() => import('./components/StartScreen'));
+const DeveloperMode = lazy(() => import('./components/DeveloperMode'));
+const UserMode = lazy(() => import('./components/UserMode'));
+
+// Loading компонент
+const LoadingSpinner = () => (
+  <div className="loading-spinner">
+    <div className="spinner"></div>
+    <p>Завантаження...</p>
+  </div>
+);
 
 function App() {
   const [currentMode, setCurrentMode] = useState('start');
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [config, setConfig] = useState({
-    sheetId: '',
-    xAxis: '',
-    chartTitle: 'Графік даних',
-    xAxisLabel: 'Час',
-    yAxisLabel: 'Значення'
+  const [config, setConfig] = useState(() => {
+    // Лінива ініціалізація стану
+    const savedConfig = localStorage.getItem('googleSheetsConfig');
+    return savedConfig ? JSON.parse(savedConfig) : {
+      sheetId: '',
+      xAxis: '',
+      chartTitle: 'Графік даних',
+      xAxisLabel: 'Час',
+      yAxisLabel: 'Значення'
+    };
   });
-  const [sensors, setSensors] = useState([]);
+  const [sensors, setSensors] = useState(() => {
+    const savedSensors = localStorage.getItem('googleSheetsSensors');
+    return savedSensors ? JSON.parse(savedSensors) : [];
+  });
   const [showSidebar, setShowSidebar] = useState(false);
 
   const sidebarRef = useRef(null);
   const overlayRef = useRef(null);
 
-  // iOS фікс - блокуємо скролл body коли відкрита панель
+  // Оптимізований iOS фікс
   useEffect(() => {
-    const handleTouchMove = (e) => {
-      if (showSidebar) {
-        e.preventDefault();
-      }
-    };
+    if (!showSidebar) return;
 
-    if (showSidebar) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-    }
-
+    const handleTouchMove = (e) => e.preventDefault();
+    
+    document.body.style.overflow = 'hidden';
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     
     return () => {
-      document.removeEventListener('touchmove', handleTouchMove);
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
+      document.removeEventListener('touchmove', handleTouchMove);
     };
   }, [showSidebar]);
 
-  // Фікс для iOS - примусово перемалювати компонент
-  const forceReflow = (element) => {
-    return element.offsetHeight; // Додаємо return
-  };
+  const handleOpenSidebar = () => setShowSidebar(true);
+  const handleCloseSidebar = () => setShowSidebar(false);
 
-  const handleOpenSidebar = () => {
-    setShowSidebar(true);
-    // Примусовий reflow для iOS
-    setTimeout(() => {
-      if (sidebarRef.current) {
-        forceReflow(sidebarRef.current);
-      }
-    }, 50);
-  };
-
-  const handleCloseSidebar = () => {
-    setShowSidebar(false);
-  };
-
-  // Завантажуємо збережену конфігурацію при старті
-  useEffect(() => {
-    const savedConfig = localStorage.getItem('googleSheetsConfig');
-    const savedSensors = localStorage.getItem('googleSheetsSensors');
-    
-    if (savedConfig) {
-      const parsedConfig = JSON.parse(savedConfig);
-      setConfig(parsedConfig);
-      console.log('✅ Завантажено збережену конфігурацію');
-    }
-    
-    if (savedSensors) {
-      const parsedSensors = JSON.parse(savedSensors);
-      setSensors(parsedSensors);
-      console.log('✅ Завантажено збережені датчики:', parsedSensors.length);
-    }
-  }, []);
-
+  // Оптимізований fetchData
   const fetchData = useCallback(async (sheetId = config.sheetId) => {
     const targetSheetId = sheetId || config.sheetId;
     
@@ -104,31 +72,35 @@ function App() {
     
     try {
       const data = await getSheetData(targetSheetId, 'AppSheetView', 'A:Z');
-      setChartData(data || []);
-      console.log('✅ Дані успішно завантажено:', data?.length, 'рядків');
       
-      if (sheetId) {
-        const newConfig = { ...config, sheetId };
-        setConfig(newConfig);
+      if (data?.length > 0) {
+        setChartData(data);
+      } else {
+        setError('❌ Таблиця порожня або не містить даних');
+        setChartData([]);
+      }
+      
+      if (sheetId && sheetId !== config.sheetId) {
+        setConfig(prev => ({ ...prev, sheetId }));
       }
     } catch (err) {
-      console.error('❌ Помилка завантаження:', err);
       setError('❌ Помилка завантаження даних. Перевірте ID таблиці та доступ.');
       setChartData([]);
     } finally {
       setLoading(false);
     }
-  }, [config]);
+  }, [config.sheetId]);
 
-  const handleConfigUpdate = (newConfig) => {
+  // Оптимізовані обробники
+  const handleConfigUpdate = useCallback((newConfig) => {
     setConfig(newConfig);
-  };
+  }, []);
 
-  const handleSensorsUpdate = (newSensors) => {
+  const handleSensorsUpdate = useCallback((newSensors) => {
     setSensors(newSensors);
-  };
+  }, []);
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = useCallback(() => {
     if (config.sheetId && config.xAxis && sensors.length > 0) {
       localStorage.setItem('googleSheetsConfig', JSON.stringify(config));
       localStorage.setItem('googleSheetsSensors', JSON.stringify(sensors));
@@ -136,9 +108,9 @@ function App() {
     } else {
       alert('⚠️ Заповніть всі обов\'язкові поля та додайте хоча б один датчик');
     }
-  };
+  }, [config, sensors]);
 
-  const handleClearConfig = () => {
+  const handleClearConfig = useCallback(() => {
     localStorage.removeItem('googleSheetsConfig');
     localStorage.removeItem('googleSheetsSensors');
     setConfig({
@@ -151,23 +123,79 @@ function App() {
     setSensors([]);
     setChartData([]);
     alert('✅ Конфігурацію очищено!');
-  };
+  }, []);
 
-  const handleEnterUserMode = () => {
+  const handleEnterUserMode = useCallback(() => {
     if (chartData.length > 0 && config.xAxis && sensors.length > 0) {
       setCurrentMode('user');
     } else {
       setError('Спочатку завантажте дані, оберіть вісь X та додайте хоча б один датчик');
     }
-  };
+  }, [chartData, config.xAxis, sensors]);
 
   const handleInstagramClick = () => {
-    window.open('https://www.instagram.com/harvest.consulting/', '_blank');
+    window.open('https://www.instagram.com/harvest.consulting/', '_blank', 'noopener,noreferrer');
+  };
+
+  const renderCurrentMode = () => {
+    switch (currentMode) {
+      case 'start':
+        return (
+          <StartScreen 
+            onDeveloperMode={() => setCurrentMode('developer')}
+            onUserMode={() => {
+              const savedConfig = localStorage.getItem('googleSheetsConfig');
+              const savedSensors = localStorage.getItem('googleSheetsSensors');
+              
+              if (savedConfig && savedSensors) {
+                const parsedConfig = JSON.parse(savedConfig);
+                const parsedSensors = JSON.parse(savedSensors);
+                setConfig(parsedConfig);
+                setSensors(parsedSensors);
+                fetchData(parsedConfig.sheetId).then(() => {
+                  setCurrentMode('user');
+                });
+              } else {
+                setCurrentMode('user');
+              }
+            }}
+            hasSavedConfig={!!localStorage.getItem('googleSheetsConfig')}
+          />
+        );
+      case 'developer':
+        return (
+          <DeveloperMode 
+            config={config}
+            data={chartData}
+            loading={loading}
+            error={error}
+            sensors={sensors}
+            onConfigUpdate={handleConfigUpdate}
+            onSensorsUpdate={handleSensorsUpdate}
+            onFetchData={fetchData}
+            onEnterUserMode={handleEnterUserMode}
+            onSaveConfig={handleSaveConfig}
+            onClearConfig={handleClearConfig}
+          />
+        );
+      case 'user':
+        return (
+          <UserMode 
+            data={chartData}
+            config={config}
+            sensors={sensors}
+            onBackToStart={() => setCurrentMode('start')}
+            onBackToDeveloper={() => setCurrentMode('developer')}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
     <div className="App">
-      {/* Сендвіч-кнопка */}
+      {/* Оптимізована сендвіч-кнопка */}
       <button 
         className="hamburger-btn"
         onClick={handleOpenSidebar}
@@ -200,32 +228,14 @@ function App() {
             <div className="menu-section">
               <h3>Режими</h3>
               <div className="mode-buttons">
-                <button 
-                  className="mode-btn"
-                  onClick={() => {
-                    setCurrentMode('start');
-                    handleCloseSidebar();
-                  }}
-                >
-                  Головна
+                <button className="mode-btn" onClick={() => { setCurrentMode('start'); handleCloseSidebar(); }}>
+                  🏠 Головна
                 </button>
-                <button 
-                  className="mode-btn"
-                  onClick={() => {
-                    setCurrentMode('developer');
-                    handleCloseSidebar();
-                  }}
-                >
-                  Налаштування
+                <button className="mode-btn" onClick={() => { setCurrentMode('developer'); handleCloseSidebar(); }}>
+                  ⚙️ Налаштування
                 </button>
-                <button 
-                  className="mode-btn"
-                  onClick={() => {
-                    setCurrentMode('user');
-                    handleCloseSidebar();
-                  }}
-                >
-                  Графіки
+                <button className="mode-btn" onClick={() => { setCurrentMode('user'); handleCloseSidebar(); }}>
+                  📊 Графіки
                 </button>
               </div>
             </div>
@@ -233,19 +243,15 @@ function App() {
             <div className="menu-section">
               <h3>Про програму</h3>
               <p className="app-description">
-                Інноваційна система моніторингу та аналізу даних для розумного поливу. 
-                Дозволяє візуалізувати та аналізувати дані з ваших датчиків у реальному часі.
+                Інноваційна система моніторингу та аналізу даних для розумного поливу
               </p>
             </div>
             
             <div className="menu-section">
               <h3>Контакти</h3>
-              <button 
-                className="instagram-btn"
-                onClick={handleInstagramClick}
-              >
+              <button className="instagram-btn" onClick={handleInstagramClick}>
                 <span className="instagram-icon">📷</span>
-                <span>Instagram: harvest.consulting</span>
+                <span>harvest.consulting</span>
               </button>
             </div>
           </div>
@@ -262,57 +268,12 @@ function App() {
       )}
       
       <div className="container">
-        {currentMode === 'start' && (
-          <StartScreen 
-            onDeveloperMode={() => setCurrentMode('developer')}
-            onUserMode={() => {
-              const savedConfig = localStorage.getItem('googleSheetsConfig');
-              const savedSensors = localStorage.getItem('googleSheetsSensors');
-              
-              if (savedConfig && savedSensors) {
-                const parsedConfig = JSON.parse(savedConfig);
-                const parsedSensors = JSON.parse(savedSensors);
-                setConfig(parsedConfig);
-                setSensors(parsedSensors);
-                fetchData(parsedConfig.sheetId).then(() => {
-                  setCurrentMode('user');
-                });
-              } else {
-                setCurrentMode('user');
-              }
-            }}
-            hasSavedConfig={!!localStorage.getItem('googleSheetsConfig')}
-          />
-        )}
-
-        {currentMode === 'developer' && (
-          <DeveloperMode 
-            config={config}
-            data={chartData}
-            loading={loading}
-            error={error}
-            sensors={sensors}
-            onConfigUpdate={handleConfigUpdate}
-            onSensorsUpdate={handleSensorsUpdate}
-            onFetchData={fetchData}
-            onEnterUserMode={handleEnterUserMode}
-            onSaveConfig={handleSaveConfig}
-            onClearConfig={handleClearConfig}
-          />
-        )}
-
-        {currentMode === 'user' && (
-          <UserMode 
-            data={chartData}
-            config={config}
-            sensors={sensors}
-            onBackToStart={() => setCurrentMode('start')}
-            onBackToDeveloper={() => setCurrentMode('developer')}
-          />
-        )}
+        <Suspense fallback={<LoadingSpinner />}>
+          {renderCurrentMode()}
+        </Suspense>
       </div>
     </div>
   );
 }
 
-export default App;
+export default React.memo(App);
