@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { getSheetData } from './services/googleSheetsAPI';
 import DeveloperMode from './components/DeveloperMode';
 import UserMode from './components/UserMode';
@@ -19,6 +19,59 @@ function App() {
   });
   const [sensors, setSensors] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
+
+  const sidebarRef = useRef(null);
+  const overlayRef = useRef(null);
+
+  // iOS фікс - блокуємо скролл body коли відкрита панель
+  useEffect(() => {
+    const handleTouchMove = (e) => {
+      if (showSidebar) {
+        e.preventDefault();
+      }
+    };
+
+    if (showSidebar) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    }
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, [showSidebar]);
+
+  // Фікс для iOS - примусово перемалювати компонент
+  const forceReflow = (element) => {
+    element.offsetHeight;
+  };
+
+  const handleOpenSidebar = () => {
+    setShowSidebar(true);
+    // Примусовий reflow для iOS
+    setTimeout(() => {
+      if (sidebarRef.current) {
+        forceReflow(sidebarRef.current);
+      }
+    }, 50);
+  };
+
+  const handleCloseSidebar = () => {
+    setShowSidebar(false);
+  };
 
   // Завантажуємо збережену конфігурацію при старті
   useEffect(() => {
@@ -114,10 +167,10 @@ function App() {
 
   return (
     <div className="App">
-      {/* Тільки сендвіч-кнопка в лівому верхньому кутку */}
+      {/* Сендвіч-кнопка */}
       <button 
         className="hamburger-btn"
-        onClick={() => setShowSidebar(!showSidebar)}
+        onClick={handleOpenSidebar}
         aria-label="Відкрити меню"
       >
         <span></span>
@@ -126,14 +179,17 @@ function App() {
       </button>
 
       {/* Бічна панель */}
-      <div className={`sidebar ${showSidebar ? 'sidebar-open' : ''}`}>
+      <div 
+        ref={sidebarRef}
+        className={`sidebar ${showSidebar ? 'sidebar-open' : ''}`}
+      >
         <div className="sidebar-content">
           <div className="sidebar-header">
             <h2>РОЗУМНИЙ ПОЛИВ</h2>
             <p>від HarvestConsulting</p>
             <button 
               className="sidebar-close"
-              onClick={() => setShowSidebar(false)}
+              onClick={handleCloseSidebar}
               aria-label="Закрити меню"
             >
               ×
@@ -148,7 +204,7 @@ function App() {
                   className="mode-btn"
                   onClick={() => {
                     setCurrentMode('start');
-                    setShowSidebar(false);
+                    handleCloseSidebar();
                   }}
                 >
                   Головна
@@ -157,7 +213,7 @@ function App() {
                   className="mode-btn"
                   onClick={() => {
                     setCurrentMode('developer');
-                    setShowSidebar(false);
+                    handleCloseSidebar();
                   }}
                 >
                   Налаштування
@@ -166,7 +222,7 @@ function App() {
                   className="mode-btn"
                   onClick={() => {
                     setCurrentMode('user');
-                    setShowSidebar(false);
+                    handleCloseSidebar();
                   }}
                 >
                   Графіки
@@ -194,13 +250,16 @@ function App() {
             </div>
           </div>
         </div>
-        
-        {/* Затемнення фону */}
-        <div 
-          className="sidebar-overlay"
-          onClick={() => setShowSidebar(false)}
-        />
       </div>
+      
+      {/* Overlay */}
+      {showSidebar && (
+        <div 
+          ref={overlayRef}
+          className="sidebar-overlay"
+          onClick={handleCloseSidebar}
+        />
+      )}
       
       <div className="container">
         {currentMode === 'start' && (
