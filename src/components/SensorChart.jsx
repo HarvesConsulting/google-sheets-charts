@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ReferenceLine, ReferenceArea
@@ -6,6 +6,7 @@ import {
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
   const [isTouching, setIsTouching] = useState(false);
+  const chartRef = useRef(null);
 
   const parseDate = (dateString) => {
     try {
@@ -123,19 +124,45 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
     );
   };
 
-  const handleTouchStart = () => {
+  const handleTouchStart = (e) => {
     setIsTouching(true);
+    // Запобігаємо всплиттю події, щоб recharts міг її обробити
+    e.stopPropagation();
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     setIsTouching(false);
+    
+    // Скидаємо активну точку через невелику затримку
+    setTimeout(() => {
+      // Знаходимо всі активні елементи графіка і скидаємо їх стан
+      const activeElements = document.querySelectorAll('.recharts-active-dot');
+      activeElements.forEach(el => {
+        el.classList.remove('recharts-active-dot');
+      });
+      
+      // Також скидаємо активні лінії
+      const activeShapes = document.querySelectorAll('.recharts-active-shape');
+      activeShapes.forEach(el => {
+        el.classList.remove('recharts-active-shape');
+      });
+    }, 50);
+    
+    e.stopPropagation();
+  };
+
+  const handleTouchMove = (e) => {
+    // Дозволяємо нормальний скролл, але все одно показуємо тултіп
+    e.stopPropagation();
   };
 
   return (
     <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd} // Додаємо обробник скасування тачу
+      onTouchCancel={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      style={{ touchAction: 'pan-y' }}
     >
       <ResponsiveContainer width="100%" height={500}>
         <AreaChart
@@ -143,6 +170,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
           margin={{ top: 10, right: 10, bottom: 10, left: 5 }}
           onMouseEnter={() => setIsTouching(true)}
           onMouseLeave={() => setIsTouching(false)}
+          ref={chartRef}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
           <XAxis
@@ -162,6 +190,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
             content={<CustomTooltip />}
             allowEscapeViewBox={{ x: true, y: true }}
             wrapperStyle={{ pointerEvents: 'none' }}
+            isAnimationActive={false} // Вимкнути анімацію для кращої продуктивності
           />
 
           <Legend />
@@ -199,6 +228,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
               strokeWidth={2}
               fill={`url(#colorSensor-${sensor.column})`}
               dot={false}
+              activeDot={false} // Вимкнути стандартні активні точки
               name={sensor.name}
             />
           ))}
