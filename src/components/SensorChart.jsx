@@ -1,7 +1,7 @@
-// SensorChart.jsx
 import React, { useMemo } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  ReferenceLine, ReferenceArea
 } from 'recharts';
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
@@ -118,43 +118,77 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={500}>
-      <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-        <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={10} />
-        <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} width={30}/>
-        <Tooltip content={<CustomTooltip />} />
-        <Legend />
-        <defs>
-    <linearGradient id="colorSensor" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-    </linearGradient>
-  </defs>
-        
-        {/* Reference Zones - лише один раз */}
-        <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
-        <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.3} stroke="none" />
-        <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.2} stroke="none" />
-        <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
-        <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
-        <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
-        
-        {activeSensors.map(sensor => (
-          <Line
-            key={sensor.column}
-            type="monotone"
-            dataKey={sensor.column}
-            stroke={sensor.color || '#3b82f6'}
-            strokeWidth={2}
-            dot={false}
-            name={sensor.name}
-            fill="url(#colorSensor)"        // 🔥 ось це
-            fillOpacity={1}
+    <div
+      onTouchEnd={() => {
+        document.dispatchEvent(new Event('mouseup'));
+      }}
+    >
+      <ResponsiveContainer width="100%" height={500}>
+        <AreaChart
+          data={chartData}
+          margin={{ top: 10, right: 10, bottom: 10, left: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+          <XAxis
+            dataKey="timestamp"
+            tickFormatter={formatDate}
+            stroke="#000"
+            fontSize={10}
           />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+          <YAxis
+            stroke="#000"
+            domain={[yMin, yMax]}
+            fontSize={10}
+            width={30}
+          />
+
+          <Tooltip
+            content={<CustomTooltip />}
+            allowEscapeViewBox={{ x: true, y: true }}
+            wrapperStyle={{ pointerEvents: 'none' }}
+          />
+
+          <Legend />
+
+          <defs>
+            {activeSensors.map(sensor => (
+              <linearGradient
+                key={sensor.column}
+                id={`colorSensor-${sensor.column}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.4} />
+                <stop offset="100%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+
+          {/* Reference Zones */}
+          <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
+          <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.3} stroke="none" />
+          <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.2} stroke="none" />
+          <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+          <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+          <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+
+          {activeSensors.map(sensor => (
+            <Area
+              key={sensor.column}
+              type="monotone"
+              dataKey={sensor.column}
+              stroke={sensor.color || '#3b82f6'}
+              strokeWidth={2}
+              fill={`url(#colorSensor-${sensor.column})`}
+              dot={false}
+              name={sensor.name}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
