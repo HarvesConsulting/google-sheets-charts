@@ -17,6 +17,16 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const sensorsPanelRef = useRef(null);
   const mainMenuButtonRef = useRef(null);
 
+  // Додаємо дебаг інформацію
+  useEffect(() => {
+    console.log('📊 UserMode отримав дані:', {
+      dataLength: data?.length,
+      config,
+      sensorsCount: sensors?.length,
+      visibleSensors
+    });
+  }, [data, config, sensors, visibleSensors]);
+
   // Ініціалізація видимості сенсорів
   useEffect(() => {
     const initialVisibility = {};
@@ -24,6 +34,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       initialVisibility[sensor.column] = sensor.visible !== false;
     });
     setVisibleSensors(initialVisibility);
+    console.log('👁️ Ініціалізація видимості сенсорів:', initialVisibility);
   }, [sensors]);
 
   // Обробник кліків поза меню
@@ -58,7 +69,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const parseDate = (dateString) => {
     if (!dateString) return null;
     try {
-      // Спрощений парсинг дати
       const parsed = new Date(dateString);
       return isNaN(parsed.getTime()) ? null : parsed.getTime();
     } catch {
@@ -90,12 +100,21 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   // Підготовка даних для графіка
   const chartData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) {
+      console.log('❌ Немає вхідних даних для графіка');
+      return [];
+    }
 
-    const processedData = data.map((row) => {
+    console.log('🔄 Підготовка даних для графіка, вхідних рядків:', data.length);
+
+    const processedData = data.map((row, index) => {
       const rawDate = row[config.xAxis];
       const timestamp = parseDate(rawDate);
-      if (!timestamp) return null;
+      
+      if (!timestamp) {
+        console.log(`⚠️ Не вдалося розпарсити дату: ${rawDate} у рядку ${index}`);
+        return null;
+      }
 
       const dataPoint = {
         name: rawDate,
@@ -114,6 +133,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       return dataPoint;
     }).filter(item => item !== null);
 
+    console.log('✅ Оброблено точок даних:', processedData.length);
+
     // Сортування за часом
     processedData.sort((a, b) => a.timestamp - b.timestamp);
 
@@ -127,7 +148,9 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
       if (rangeMs) {
         const cutoff = now - rangeMs;
-        return processedData.filter(d => d.timestamp >= cutoff);
+        const filteredData = processedData.filter(d => d.timestamp >= cutoff);
+        console.log(`⏰ Фільтрація за періодом ${timeRange}: ${processedData.length} -> ${filteredData.length} точок`);
+        return filteredData;
       }
     }
 
@@ -135,16 +158,20 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   }, [data, config.xAxis, sensors, visibleSensors, timeRange]);
 
   // Активні сенсори
-  const activeSensors = useMemo(() => 
-    sensors.filter(sensor => visibleSensors[sensor.column] !== false),
-    [sensors, visibleSensors]
-  );
+  const activeSensors = useMemo(() => {
+    const active = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+    console.log('🎯 Активні сенсори:', active);
+    return active;
+  }, [sensors, visibleSensors]);
 
   // Розрахунок статистики поливів
   const wateringStats = useMemo(() => {
     if (!chartData || chartData.length === 0 || activeSensors.length === 0) {
+      console.log('❌ Немає даних для розрахунку статистики поливів');
       return { wateringCount: 0, averageInterval: 0 };
     }
+
+    console.log('💧 Розрахунок статистики поливів з', chartData.length, 'точок');
 
     const mainSensor = activeSensors[0];
     const wateringEvents = [];
@@ -182,6 +209,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       ? intervals.reduce((sum, int) => sum + int, 0) / intervals.length 
       : 0;
 
+    console.log('📈 Статистика поливів:', { wateringCount, averageInterval, events: wateringEvents.length });
+
     return {
       wateringCount,
       averageInterval: Math.round(averageInterval * 10) / 10
@@ -190,13 +219,19 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   // Діапазон для Y осі
   const yAxisRange = useMemo(() => {
-    if (chartData.length === 0) return { yMin: 0, yMax: 24 };
+    if (chartData.length === 0) {
+      console.log('📏 Графік порожній, використовуються значення за замовчуванням');
+      return { yMin: 0, yMax: 24 };
+    }
     
     const allValues = chartData.flatMap(point => 
       activeSensors.map(sensor => point[sensor.column]).filter(val => val !== null)
     );
     
-    if (allValues.length === 0) return { yMin: 0, yMax: 24 };
+    if (allValues.length === 0) {
+      console.log('📏 Немає значень для Y осі');
+      return { yMin: 0, yMax: 24 };
+    }
     
     let yMin = Math.min(...allValues);
     let yMax = Math.max(...allValues);
@@ -204,6 +239,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     const padding = (yMax - yMin) * 0.1;
     yMin = Math.max(0, yMin - padding);
     yMax += padding;
+    
+    console.log('📏 Діапазон Y осі:', { yMin, yMax, valuesCount: allValues.length });
     
     return { yMin, yMax };
   }, [chartData, activeSensors]);
@@ -284,12 +321,27 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   // Стан без даних
   if (!data || data.length === 0 || chartData.length === 0) {
+    console.log('🚨 Відображення стану без даних:', {
+      hasData: !!data,
+      dataLength: data?.length,
+      chartDataLength: chartData?.length,
+      config,
+      sensors: sensors?.length
+    });
+    
     return (
       <div className="user-mode">
         <div className="no-data">
           <div className="no-data-icon">📭</div>
           <h2>Немає даних для побудови графіка</h2>
           <p>Перевірте налаштування даних або спробуйте інший період</p>
+          <div className="debug-info">
+            <p><strong>Дані для дебагу:</strong></p>
+            <p>Отримано рядків: {data?.length || 0}</p>
+            <p>Оброблено точок: {chartData?.length || 0}</p>
+            <p>Вісь X: {config.xAxis || 'не вибрана'}</p>
+            <p>Датчики: {sensors?.length || 0}</p>
+          </div>
           <button onClick={onBackToDeveloper} className="btn btn-primary">
             🔧 Повернутись до налаштувань
           </button>
@@ -297,6 +349,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       </div>
     );
   }
+
+  console.log('🎨 Відображення графіка з', chartData.length, 'точками');
 
   return (
     <div className="user-mode">
