@@ -125,6 +125,12 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
         <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={12} />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
+        <defs>
+    <linearGradient id="colorSensor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+    </linearGradient>
+  </defs>
         
         {/* Reference Zones - лише один раз */}
         <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
@@ -139,10 +145,12 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
             key={sensor.column}
             type="monotone"
             dataKey={sensor.column}
-            stroke={sensor.color || '#1e3a8a'}
-            strokeWidth={4}
+            stroke={sensor.color || '#3b82f6'}
+            strokeWidth={2}
             dot={false}
             name={sensor.name}
+            fill="url(#colorSensor)"        // 🔥 ось це
+            fillOpacity={1}
           />
         ))}
       </LineChart>
