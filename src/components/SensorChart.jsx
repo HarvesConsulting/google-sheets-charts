@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
-  const [isTouching, setIsTouching] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState(false);
 
   const parseDate = (dateString) => {
     try {
@@ -40,6 +40,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
     });
   };
 
+  // Оптимізація даних для великих наборів
   const chartData = useMemo(() => {
     if (!data?.length) return [];
 
@@ -72,6 +73,12 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       result = result.filter(d => d.timestamp >= cutoff);
     }
 
+    // Додаткова оптимізація: зменшення кількості точок для великих наборів
+    if (result.length > 1000) {
+      const step = Math.ceil(result.length / 500); // Макс 500 точок
+      result = result.filter((_, index) => index % step === 0);
+    }
+
     return result;
   }, [data, config, sensors, visibleSensors, timeRange]);
 
@@ -91,15 +98,11 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   const { yMin, yMax } = getYAxisRange();
 
-  const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload?.length || !isTouching) return null;
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
     
     return (
       <div style={{
-        position: 'absolute',
-        left: coordinate?.x,
-        top: coordinate?.y - 60,
-        transform: 'translateX(-50%)',
         background: '#fff',
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
@@ -108,7 +111,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
         boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
         pointerEvents: 'none',
         whiteSpace: 'nowrap',
-        zIndex: 999,
+        zIndex: 1000,
         color: '#000'
       }}>
         <div style={{ fontWeight: 600, marginBottom: 6 }}>{formatDate(label, true)}</div>
@@ -123,29 +126,56 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   return (
     <div 
-      onTouchStart={() => setIsTouching(true)}
-      onTouchEnd={() => setIsTouching(false)}
-      onTouchCancel={() => setIsTouching(false)}
-      style={{ touchAction: 'pan-y' }}
+      onTouchStart={() => setActiveTooltip(true)}
+      onTouchEnd={() => setTimeout(() => setActiveTooltip(false), 100)}
+      style={{ 
+        touchAction: 'pan-y pinch-zoom',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
+      }}
     >
       <ResponsiveContainer width="100%" height={500}>
         <LineChart 
           data={chartData} 
           margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
-          onMouseEnter={() => setIsTouching(true)}
-          onMouseLeave={() => setIsTouching(false)}
+          onMouseEnter={() => setActiveTooltip(true)}
+          onMouseLeave={() => setActiveTooltip(false)}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-          <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={10} />
-          <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} width={30} />
-          <Tooltip content={<CustomTooltip />} />
+          <XAxis 
+            dataKey="timestamp" 
+            tickFormatter={formatDate} 
+            stroke="#000" 
+            fontSize={10}
+            minTickGap={50} // Зменшення кількості підписів
+          />
+          <YAxis 
+            stroke="#000" 
+            domain={[yMin, yMax]} 
+            fontSize={10} 
+            width={30} 
+          />
+          <Tooltip 
+            content={<CustomTooltip />}
+            trigger={activeTooltip ? "hover" : "none"}
+            animationDuration={200}
+          />
           <Legend />
           <defs>
-    <linearGradient id="colorSensor" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-    </linearGradient>
-  </defs>
+            {activeSensors.map(sensor => (
+              <linearGradient 
+                key={`gradient-${sensor.column}`}
+                id={`gradient-${sensor.column}`} 
+                x1="0" 
+                y1="0" 
+                x2="0" 
+                y2="1"
+              >
+                <stop offset="0%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.4} />
+                <stop offset="100%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
           
           {/* Reference Zones */}
           <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.2} stroke="none" />
@@ -157,14 +187,21 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
           
           {activeSensors.map(sensor => (
             <Line
-               key={sensor.column}
-      type="monotone"
-      dataKey={sensor.column}
-      stroke={sensor.color || '#1e3a8a'}
-      strokeWidth={2}
-      dot={false}
-      name={sensor.name}
-      fill={`url(#gradient-${sensor.column})`}
+              key={sensor.column}
+              type="monotone"
+              dataKey={sensor.column}
+              stroke={sensor.color || '#1e3a8a'}
+              strokeWidth={2}
+              dot={false} // Вимкнути точки для продуктивності
+              activeDot={{
+                r: 4,
+                strokeWidth: 2,
+                stroke: sensor.color || '#1e3a8a',
+                fill: '#fff',
+              }}
+              name={sensor.name}
+              isAnimationActive={false} // Вимкнути анімацію для продуктивності
+              connectNulls={true}
             />
           ))}
         </LineChart>
