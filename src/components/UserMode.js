@@ -8,7 +8,6 @@ import './UserMode.css';
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
   const [timeRange, setTimeRange] = useState('7d');
-  const [showControls, setShowControls] = useState(false);
   const [showBottomPanel, setShowBottomPanel] = useState(false);
 
   useEffect(() => {
@@ -221,63 +220,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      {/* Верхня сендвіч кнопка */}
-      <div className="hamburger-toggle top-hamburger" onClick={() => setShowControls(!showControls)}>
-        <div className="hamburger-line"></div>
-        <div className="hamburger-line"></div>
-        <div className="hamburger-line"></div>
-      </div>
-
-      {/* Панель керування зверху */}
-      <div className={`controls-panel ${showControls ? 'open' : ''}`}>
-        <div className="controls-group">
-          <label>Період даних:</label>
-          <div className="time-buttons">
-            <button 
-              className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
-              onClick={() => setTimeRange('all')}
-            >
-              Весь період
-            </button>
-            <button 
-              className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
-              onClick={() => setTimeRange('7d')}
-            >
-              7 днів
-            </button>
-            <button 
-              className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
-              onClick={() => setTimeRange('1d')}
-            >
-              Добу
-            </button>
-          </div>
-        </div>
-
-        <div className="controls-group">
-          <label>Вибір датчиків:</label>
-          <div className="sensors-toggle">
-            {sensors.map(sensor => (
-              <label key={sensor.column} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={visibleSensors[sensor.column] !== false}
-                  onChange={(e) => setVisibleSensors(prev => ({
-                    ...prev,
-                    [sensor.column]: e.target.checked
-                  }))}
-                />
-                <span 
-                  className="sensor-color" 
-                  style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-                ></span>
-                <span className="sensor-name">{sensor.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Графік */}
       <div className="chart-section">
         <div className="chart-container">
@@ -329,8 +271,60 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
         
         <div className={`bottom-controls ${showBottomPanel ? 'open' : ''}`}>
-          <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
-          <button onClick={onBackToDeveloper} className="btn btn-primary">⚙️ Налаштування</button>
+          {/* Кнопки навігації */}
+          <div className="nav-buttons">
+            <button onClick={onBackToStart} className="nav-btn">На головну</button>
+            <button onClick={onBackToDeveloper} className="nav-btn">Налаштування</button>
+          </div>
+
+          {/* Вибір періоду */}
+          <div className="controls-group">
+            <label>Період даних:</label>
+            <div className="time-buttons">
+              <button 
+                className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
+                onClick={() => setTimeRange('all')}
+              >
+                Весь період
+              </button>
+              <button 
+                className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
+                onClick={() => setTimeRange('7d')}
+              >
+                7 днів
+              </button>
+              <button 
+                className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
+                onClick={() => setTimeRange('1d')}
+              >
+                Добу
+              </button>
+            </div>
+          </div>
+
+          {/* Вибір датчиків */}
+          <div className="controls-group">
+            <label>Вибір датчиків:</label>
+            <div className="sensors-toggle">
+              {sensors.map(sensor => (
+                <label key={sensor.column} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={visibleSensors[sensor.column] !== false}
+                    onChange={(e) => setVisibleSensors(prev => ({
+                      ...prev,
+                      [sensor.column]: e.target.checked
+                    }))}
+                  />
+                  <span 
+                    className="sensor-color" 
+                    style={{ backgroundColor: sensor.color || '#1e3a8a' }}
+                  ></span>
+                  <span className="sensor-name">{sensor.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
