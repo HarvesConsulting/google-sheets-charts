@@ -11,7 +11,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showSensorsPanel, setShowSensorsPanel] = useState(false);
-  const [hoveredPoint, setHoveredPoint] = useState(null);
 
   const mainMenuRef = useRef(null);
   const periodPanelRef = useRef(null);
@@ -29,6 +28,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   // Обробник кліків поза меню та панелями
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Закриваємо головне меню
       if (showMainMenu && 
           mainMenuRef.current && 
           mainMenuButtonRef.current &&
@@ -37,12 +37,14 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         setShowMainMenu(false);
       }
       
+      // Закриваємо панель періоду
       if (showPeriodPanel && 
           periodPanelRef.current && 
           !periodPanelRef.current.contains(event.target)) {
         setShowPeriodPanel(false);
       }
       
+      // Закриваємо панель датчиків
       if (showSensorsPanel && 
           sensorsPanelRef.current && 
           !sensorsPanelRef.current.contains(event.target)) {
@@ -54,7 +56,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMainMenu, showPeriodPanel, showSensorsPanel]);
 
-  // Функції парсингу даних залишаються незмінними
   const parseDate = (dateString) => {
     if (!dateString) return null;
     try {
@@ -152,6 +153,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   }, [data, config, sensors, visibleSensors, timeRange]);
 
   const activeSensors = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+  const lineType = 'monotone';
 
   const getYAxisRange = () => {
     if (chartData.length === 0) return { yMin: 0, yMax: 24 };
@@ -177,49 +179,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   const { yMin, yMax } = getYAxisRange();
 
-  // Кастомна точка для графіка
-  const CustomDot = (props) => {
-    const { cx, cy, value, index } = props;
-    const isHovered = hoveredPoint === index;
-    
-    if (!value || value === null) return null;
-
-    return (
-      <g>
-        {/* Зовнішнє кільце при наведенні */}
-        {isHovered && (
-          <circle
-            cx={cx}
-            cy={cy}
-            r={12}
-            fill="none"
-            stroke={props.stroke || '#3b82f6'}
-            strokeWidth={2}
-            strokeOpacity={0.3}
-          />
-        )}
-        {/* Основна точка */}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={isHovered ? 5 : 3}
-          fill="#fff"
-          stroke={props.stroke || '#3b82f6'}
-          strokeWidth={isHovered ? 3 : 2}
-          style={{ transition: 'all 0.2s ease' }}
-        />
-        {/* Внутрішня точка */}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={isHovered ? 2 : 1}
-          fill={props.stroke || '#3b82f6'}
-          style={{ transition: 'all 0.2s ease' }}
-        />
-      </g>
-    );
-  };
-
   const CustomTooltip = ({ active, payload, label, coordinate }) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -232,51 +191,59 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       color: '#000000',
       border: '1px solid #e5e7eb',
       borderRadius: '8px',
-      padding: '12px 16px',
+      padding: '10px 14px',
       fontSize: '0.9rem',
-      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
       pointerEvents: 'none',
       whiteSpace: 'nowrap',
-      zIndex: 999,
-      backdropFilter: 'blur(10px)'
+      zIndex: 999
     };
 
     return (
       <div className="custom-tooltip" style={tooltipStyle}>
-        <div style={{ 
-          fontWeight: '600', 
-          marginBottom: '8px', 
-          color: '#000000',
-          borderBottom: '1px solid #e5e7eb',
-          paddingBottom: '6px'
-        }}>
+        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#000000' }}>
           {formatTooltipDate(label)}
         </div>
         {payload.map((entry, i) => (
-          <div key={i} style={{ 
-            color: '#000000',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '4px'
-          }}>
-            <div 
-              style={{ 
-                width: '12px', 
-                height: '12px', 
-                backgroundColor: entry.color || '#1e3a8a',
-                borderRadius: '2px'
-              }} 
-            />
-            <strong style={{ color: entry.color || '#1e3a8a', minWidth: '120px' }}>
-              {entry.name}:
-            </strong>
-            <span style={{ fontWeight: '600' }}>{entry.value}</span>
+          <div key={i} style={{ color: '#000000' }}>
+            <strong style={{ color: entry.color || '#1e3a8a' }}>{entry.name}:</strong> {entry.value}
           </div>
         ))}
       </div>
     );
   };
+
+  // Додайте в компонент
+const AnimatedGradientLine = ({ dataKey, color, isActive }) => {
+  return (
+    <>
+      <defs>
+        <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.8}/>
+          <stop offset="100%" stopColor={color} stopOpacity={0.1}/>
+        </linearGradient>
+      </defs>
+      <Line
+        type="monotone"
+        dataKey={dataKey}
+        stroke={`url(#gradient-${dataKey})`}
+        strokeWidth={4}
+        strokeLinecap="round"
+        dot={false}
+        activeDot={{
+          r: 6,
+          fill: color,
+          stroke: "#fff",
+          strokeWidth: 2
+        }}
+        name={sensors.find(s => s.column === dataKey)?.name}
+        isAnimationActive={true}
+        animationDuration={1000}
+        animationEasing="ease-out"
+      />
+    </>
+  );
+};
 
   const renderZones = () => (
     <>
@@ -284,25 +251,25 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         y1={0} 
         y2={6} 
         fill="#ff4444" 
-        fillOpacity={0.15}
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceArea 
         y1={6} 
         y2={18} 
         fill="#ffcc00" 
-        fillOpacity={0.15}
+        fillOpacity={0.2}
         stroke="none"
       />
       <ReferenceArea 
         y1={18} 
         y2={yMax} 
         fill="#44ff44" 
-        fillOpacity={0.15}
+        fillOpacity={0.2}
         stroke="none"
       />
-      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={1.5} strokeDasharray="5 5" opacity={0.6} />
-      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={1.5} strokeDasharray="5 5" opacity={0.6} />
+      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
     </>
   );
 
@@ -330,83 +297,36 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <LineChart
               data={chartData}
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-              onMouseMove={(data) => setHoveredPoint(data.activeTooltipIndex)}
-              onMouseLeave={() => setHoveredPoint(null)}
             >
-              <defs>
-                {/* Градієнти для ліній */}
-                {activeSensors.map(sensor => (
-                  <linearGradient 
-                    key={`gradient-${sensor.column}`} 
-                    id={`gradient-${sensor.column}`} 
-                    x1="0" 
-                    y1="0" 
-                    x2="0" 
-                    y2="1"
-                  >
-                    <stop offset="0%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.8}/>
-                    <stop offset="100%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.2}/>
-                  </linearGradient>
-                ))}
-              </defs>
-
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="#e5e7eb" 
-                opacity={0.4}
-                vertical={false}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
               <XAxis 
                 dataKey="timestamp" 
                 tickFormatter={formatDateForDisplay} 
-                stroke="#64748b" 
-                fontSize={11}
-                tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
+                stroke="#000000" 
+                fontSize={12}
               />
               <YAxis 
-                stroke="#64748b" 
-                width={35} 
+                stroke="#000000" 
+                width={30} 
                 domain={[yMin, yMax]} 
-                fontSize={11}
-                tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
+                fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{
-                  paddingTop: '10px',
-                  fontSize: '12px'
-                }}
-              />
+              <Legend />
               {renderZones()}
               {activeSensors.map(sensor => (
                 <Line
                   key={sensor.column}
-                  type="monotone"
+                  type={lineType}
                   dataKey={sensor.column}
-                  stroke={sensor.color || '#3b82f6'}
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  dot={<CustomDot stroke={sensor.color} />}
-                  activeDot={{
-                    r: 6,
-                    fill: '#fff',
-                    stroke: sensor.color || '#3b82f6',
-                    strokeWidth: 3,
-                    style: { 
-                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                    }
-                  }}
-                  isAnimationActive={true}
-                  animationDuration={1000}
-                  animationEasing="ease-out"
+                  stroke={sensor.color || '#1e3a8a'}
+                  strokeWidth={4}
+                  strokeOpacity={1}
+                  dot={false}
                   name={sensor.name}
-                  connectNulls={true}
                 />
               ))}
-              <ReferenceLine y={0} stroke="#94a3b8" opacity={0.3} />
+              <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
             </LineChart>
           </ResponsiveContainer>
         </div>
