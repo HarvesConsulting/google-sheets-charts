@@ -122,7 +122,7 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
         <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={10} />
-        <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} />
+        <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} width={30}/>
         <Tooltip content={<CustomTooltip />} />
         <Legend />
         <defs>
