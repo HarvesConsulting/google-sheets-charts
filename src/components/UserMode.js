@@ -181,21 +181,22 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         y1={0} 
         y2={6} 
         fill="#ff4444" 
-        fillOpacity={0.4} 
+        fillOpacity={0.2
+                  } 
         stroke="none"
       />
       <ReferenceArea 
         y1={6} 
         y2={18} 
         fill="#ffcc00" 
-        fillOpacity={0.4} 
+        fillOpacity={0.2} 
         stroke="none"
       />
       <ReferenceArea 
         y1={18} 
         y2={yMax} 
         fill="#44ff44" 
-        fillOpacity={0.4} 
+        fillOpacity={0.2} 
         stroke="none"
       />
       <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />

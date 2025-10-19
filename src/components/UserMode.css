@@ -511,3 +511,54 @@ html, body {
     right: 16px;
   }
 }
+/* Кнопки вибору періоду */
+.time-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-btn {
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.time-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.time-btn.active {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* Адаптація для мобільних */
+@media (max-width: 768px) {
+  .time-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .time-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .controls-panel {
+    width: calc(100vw - 32px);
+    left: 16px;
+    right: 16px;
+  }
+}
