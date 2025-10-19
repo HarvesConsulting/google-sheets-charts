@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ReferenceLine, ReferenceArea
 } from 'recharts';
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
+  const [tooltipActive, setTooltipActive] = useState(false);
+
   const parseDate = (dateString) => {
     try {
       const match = /Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/.exec(dateString);
@@ -89,7 +91,8 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
   const { yMin, yMax } = getYAxisRange();
 
   const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload?.length) return null;
+    if (!active || !payload?.length || !tooltipActive) return null;
+    
     return (
       <div style={{
         position: 'absolute',
@@ -117,16 +120,29 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
     );
   };
 
+  const handleTouchEnd = () => {
+    // Затримка для того, щоб дати час тултіпу відобразитись перед приховуванням
+    setTimeout(() => {
+      setTooltipActive(false);
+    }, 100);
+  };
+
+  const handleTouchStart = () => {
+    setTooltipActive(true);
+  };
+
   return (
     <div
-      onTouchEnd={() => {
-        document.dispatchEvent(new Event('mouseup'));
-      }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseLeave={() => setTooltipActive(false)}
     >
       <ResponsiveContainer width="100%" height={500}>
         <AreaChart
           data={chartData}
           margin={{ top: 10, right: 10, bottom: 10, left: 5 }}
+          onMouseEnter={() => setTooltipActive(true)}
+          onMouseLeave={() => setTooltipActive(false)}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
           <XAxis
