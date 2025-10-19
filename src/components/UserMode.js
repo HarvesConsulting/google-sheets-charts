@@ -11,6 +11,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showSensorsPanel, setShowSensorsPanel] = useState(false);
+  const [hoveredPoint, setHoveredPoint] = useState(null);
 
   const mainMenuRef = useRef(null);
   const periodPanelRef = useRef(null);
@@ -28,7 +29,6 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
   // Обробник кліків поза меню та панелями
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Закриваємо головне меню
       if (showMainMenu && 
           mainMenuRef.current && 
           mainMenuButtonRef.current &&
@@ -37,14 +37,12 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         setShowMainMenu(false);
       }
       
-      // Закриваємо панель періоду
       if (showPeriodPanel && 
           periodPanelRef.current && 
           !periodPanelRef.current.contains(event.target)) {
         setShowPeriodPanel(false);
       }
       
-      // Закриваємо панель датчиків
       if (showSensorsPanel && 
           sensorsPanelRef.current && 
           !sensorsPanelRef.current.contains(event.target)) {
@@ -108,6 +106,60 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       second: '2-digit'
     });
   };
+
+  // Розрахунок показників поливу
+  const calculateWateringStats = useMemo(() => {
+    if (!chartData || chartData.length === 0) {
+      return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
+    }
+
+    const activeSensorsList = sensors.filter(sensor => visibleSensors[sensor.column] !== false);
+    if (activeSensorsList.length === 0) return { wateringCount: 0, averageInterval: 0, wateringEvents: [] };
+
+    // Беремо перший активний датчик для аналізу поливів
+    const mainSensor = activeSensorsList[0];
+    const wateringEvents = [];
+    const intervals = [];
+
+    // Шукаємо події поливу (збільшення вологості більше ніж на 5 одиниць)
+    for (let i = 1; i < chartData.length; i++) {
+      const currentPoint = chartData[i];
+      const previousPoint = chartData[i - 1];
+      
+      const currentValue = currentPoint[mainSensor.column];
+      const previousValue = previousPoint[mainSensor.column];
+
+      if (currentValue !== null && previousValue !== null) {
+        const moistureIncrease = currentValue - previousValue;
+        
+        if (moistureIncrease > 5) {
+          wateringEvents.push({
+            timestamp: currentPoint.timestamp,
+            moistureIncrease: moistureIncrease,
+            value: currentValue
+          });
+
+          // Розраховуємо інтервал між поливами
+          if (wateringEvents.length > 1) {
+            const prevWatering = wateringEvents[wateringEvents.length - 2];
+            const intervalHours = (currentPoint.timestamp - prevWatering.timestamp) / (1000 * 60 * 60);
+            intervals.push(intervalHours);
+          }
+        }
+      }
+    }
+
+    const wateringCount = wateringEvents.length;
+    const averageInterval = intervals.length > 0 
+      ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
+      : 0;
+
+    return {
+      wateringCount,
+      averageInterval: Math.round(averageInterval * 10) / 10, // Округлення до 1 знака після коми
+      wateringEvents
+    };
+  }, [chartData, sensors, visibleSensors]);
 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -179,6 +231,49 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   const { yMin, yMax } = getYAxisRange();
 
+  // Кастомна точка для графіка
+  const CustomDot = (props) => {
+    const { cx, cy, value, index } = props;
+    const isHovered = hoveredPoint === index;
+    
+    if (!value || value === null) return null;
+
+    return (
+      <g>
+        {/* Зовнішнє кільце при наведенні */}
+        {isHovered && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={12}
+            fill="none"
+            stroke={props.stroke || '#3b82f6'}
+            strokeWidth={2}
+            strokeOpacity={0.3}
+          />
+        )}
+        {/* Основна точка */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={isHovered ? 5 : 3}
+          fill="#fff"
+          stroke={props.stroke || '#3b82f6'}
+          strokeWidth={isHovered ? 3 : 2}
+          style={{ transition: 'all 0.2s ease' }}
+        />
+        {/* Внутрішня точка */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={isHovered ? 2 : 1}
+          fill={props.stroke || '#3b82f6'}
+          style={{ transition: 'all 0.2s ease' }}
+        />
+      </g>
+    );
+  };
+
   const CustomTooltip = ({ active, payload, label, coordinate }) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -191,22 +286,46 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
       color: '#000000',
       border: '1px solid #e5e7eb',
       borderRadius: '8px',
-      padding: '10px 14px',
+      padding: '12px 16px',
       fontSize: '0.9rem',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
       pointerEvents: 'none',
       whiteSpace: 'nowrap',
-      zIndex: 999
+      zIndex: 999,
+      backdropFilter: 'blur(10px)'
     };
 
     return (
       <div className="custom-tooltip" style={tooltipStyle}>
-        <div style={{ fontWeight: '600', marginBottom: '6px', color: '#000000' }}>
+        <div style={{ 
+          fontWeight: '600', 
+          marginBottom: '8px', 
+          color: '#000000',
+          borderBottom: '1px solid #e5e7eb',
+          paddingBottom: '6px'
+        }}>
           {formatTooltipDate(label)}
         </div>
         {payload.map((entry, i) => (
-          <div key={i} style={{ color: '#000000' }}>
-            <strong style={{ color: entry.color || '#1e3a8a' }}>{entry.name}:</strong> {entry.value}
+          <div key={i} style={{ 
+            color: '#000000',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '4px'
+          }}>
+            <div 
+              style={{ 
+                width: '12px', 
+                height: '12px', 
+                backgroundColor: entry.color || '#1e3a8a',
+                borderRadius: '2px'
+              }} 
+            />
+            <strong style={{ color: entry.color || '#1e3a8a', minWidth: '120px' }}>
+              {entry.name}:
+            </strong>
+            <span style={{ fontWeight: '600' }}>{entry.value}</span>
           </div>
         ))}
       </div>
@@ -219,25 +338,25 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         y1={0} 
         y2={6} 
         fill="#ff4444" 
-        fillOpacity={0.2}
+        fillOpacity={0.15}
         stroke="none"
       />
       <ReferenceArea 
         y1={6} 
         y2={18} 
         fill="#ffcc00" 
-        fillOpacity={0.2}
+        fillOpacity={0.15}
         stroke="none"
       />
       <ReferenceArea 
         y1={18} 
         y2={yMax} 
         fill="#44ff44" 
-        fillOpacity={0.2}
+        fillOpacity={0.15}
         stroke="none"
       />
-      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
-      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
+      <ReferenceLine y={6} stroke="#ff4444" strokeWidth={1.5} strokeDasharray="5 5" opacity={0.6} />
+      <ReferenceLine y={18} stroke="#44ff44" strokeWidth={1.5} strokeDasharray="5 5" opacity={0.6} />
     </>
   );
 
@@ -256,6 +375,8 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     );
   }
 
+  const { wateringCount, averageInterval } = calculateWateringStats;
+
   return (
     <div className="user-mode">
       {/* Графік */}
@@ -265,38 +386,108 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             <LineChart
               data={chartData}
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+              onMouseMove={(data) => setHoveredPoint(data.activeTooltipIndex)}
+              onMouseLeave={() => setHoveredPoint(null)}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+              <defs>
+                {/* Градієнти для ліній */}
+                {activeSensors.map(sensor => (
+                  <linearGradient 
+                    key={`gradient-${sensor.column}`} 
+                    id={`gradient-${sensor.column}`} 
+                    x1="0" 
+                    y1="0" 
+                    x2="0" 
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.8}/>
+                    <stop offset="100%" stopColor={sensor.color || '#3b82f6'} stopOpacity={0.2}/>
+                  </linearGradient>
+                ))}
+              </defs>
+
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke="#e5e7eb" 
+                opacity={0.4}
+                vertical={false}
+              />
               <XAxis 
                 dataKey="timestamp" 
                 tickFormatter={formatDateForDisplay} 
-                stroke="#000000" 
-                fontSize={12}
+                stroke="#64748b" 
+                fontSize={11}
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
               />
               <YAxis 
-                stroke="#000000" 
-                width={30} 
+                stroke="#64748b" 
+                width={35} 
                 domain={[yMin, yMax]} 
-                fontSize={12}
+                fontSize={11}
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend />
+              <Legend 
+                wrapperStyle={{
+                  paddingTop: '10px',
+                  fontSize: '12px'
+                }}
+              />
               {renderZones()}
               {activeSensors.map(sensor => (
                 <Line
                   key={sensor.column}
-                  type={lineType}
+                  type="monotone"
                   dataKey={sensor.column}
-                  stroke={sensor.color || '#1e3a8a'}
-                  strokeWidth={4}
-                  strokeOpacity={1}
-                  dot={false}
+                  stroke={sensor.color || '#3b82f6'}
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  dot={<CustomDot stroke={sensor.color} />}
+                  activeDot={{
+                    r: 6,
+                    fill: '#fff',
+                    stroke: sensor.color || '#3b82f6',
+                    strokeWidth: 3,
+                    style: { 
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+                    }
+                  }}
+                  isAnimationActive={true}
+                  animationDuration={1000}
+                  animationEasing="ease-out"
                   name={sensor.name}
+                  connectNulls={true}
                 />
               ))}
-              <ReferenceLine y={0} stroke="#9CA3AF" opacity={0.5} />
+              <ReferenceLine y={0} stroke="#94a3b8" opacity={0.3} />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Показники поливу */}
+      <div className="watering-stats">
+        <div className="stats-container">
+          <div className="stat-item">
+            <div className="stat-icon">💧</div>
+            <div className="stat-content">
+              <div className="stat-value">{wateringCount}</div>
+              <div className="stat-label">кількість зволожень</div>
+              <div className="stat-description">збільшення вологості більше ніж на 5%</div>
+            </div>
+          </div>
+          
+          <div className="stat-item">
+            <div className="stat-icon">⏱️</div>
+            <div className="stat-content">
+              <div className="stat-value">{averageInterval} год</div>
+              <div className="stat-label">середній інтервал</div>
+              <div className="stat-description">між поливами</div>
+            </div>
+          </div>
         </div>
       </div>
 
