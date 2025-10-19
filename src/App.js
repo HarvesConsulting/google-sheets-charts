@@ -18,6 +18,7 @@ function App() {
     yAxisLabel: 'Значення'
   });
   const [sensors, setSensors] = useState([]);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Завантажуємо збережену конфігурацію при старті
   useEffect(() => {
@@ -107,12 +108,107 @@ function App() {
     }
   };
 
+  const handleInstagramClick = () => {
+    window.open('https://www.instagram.com/harvest.consulting/', '_blank');
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>РОЗУМНИЙ ПОЛИВ</h1>
-        <p>від HarvestConsulting</p>
+      {/* Синій верхній бар з сендвіч-кнопкою */}
+      <header className="top-header">
+        <div className="header-content">
+          <button 
+            className="hamburger-btn"
+            onClick={() => setShowSidebar(!showSidebar)}
+            aria-label="Відкрити меню"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div className="header-title">
+            <h1>РОЗУМНИЙ ПОЛИВ</h1>
+            <p>від HarvestConsulting</p>
+          </div>
+        </div>
       </header>
+
+      {/* Бічна панель */}
+      <div className={`sidebar ${showSidebar ? 'sidebar-open' : ''}`}>
+        <div className="sidebar-content">
+          <div className="sidebar-header">
+            <h2>РОЗУМНИЙ ПОЛИВ</h2>
+            <p>від HarvestConsulting</p>
+            <button 
+              className="sidebar-close"
+              onClick={() => setShowSidebar(false)}
+              aria-label="Закрити меню"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="sidebar-menu">
+            <div className="menu-section">
+              <h3>Про програму</h3>
+              <p className="app-description">
+                Інноваційна система моніторингу та аналізу даних для розумного поливу. 
+                Дозволяє візуалізувати та аналізувати дані з ваших датчиків у реальному часі.
+              </p>
+            </div>
+            
+            <div className="menu-section">
+              <h3>Контакти</h3>
+              <button 
+                className="instagram-btn"
+                onClick={handleInstagramClick}
+              >
+                <span className="instagram-icon">📷</span>
+                <span>Instagram: harvest.consulting</span>
+              </button>
+            </div>
+
+            <div className="menu-section">
+              <h3>Режими</h3>
+              <div className="mode-buttons">
+                <button 
+                  className="mode-btn"
+                  onClick={() => {
+                    setCurrentMode('start');
+                    setShowSidebar(false);
+                  }}
+                >
+                  Головна
+                </button>
+                <button 
+                  className="mode-btn"
+                  onClick={() => {
+                    setCurrentMode('developer');
+                    setShowSidebar(false);
+                  }}
+                >
+                  Налаштування
+                </button>
+                <button 
+                  className="mode-btn"
+                  onClick={() => {
+                    setCurrentMode('user');
+                    setShowSidebar(false);
+                  }}
+                >
+                  Графіки
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Затемнення фону */}
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setShowSidebar(false)}
+        />
+      </div>
       
       <div className="container">
         {currentMode === 'start' && (
