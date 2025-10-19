@@ -7,8 +7,7 @@ import './UserMode.css';
 
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
-  const [timeRange, setTimeRange] = useState('7d');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [timeRange, setTimeRange] = useState('all');
 
   useEffect(() => {
     const initialVisibility = {};
@@ -121,23 +120,23 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   const getYAxisRange = () => {
     if (chartData.length === 0) return { yMin: 0, yMax: 24 };
-
+    
     let yMin = 0;
     let yMax = 24;
-
-    const allValues = chartData.flatMap(point =>
+    
+    const allValues = chartData.flatMap(point => 
       activeSensors.map(sensor => point[sensor.column]).filter(val => val !== null)
     );
-
+    
     if (allValues.length > 0) {
       yMin = Math.min(...allValues);
       yMax = Math.max(...allValues);
-
+      
       const padding = (yMax - yMin) * 0.1;
       yMin = Math.min(yMin - padding, 0);
       yMax += padding;
     }
-
+    
     return { yMin, yMax };
   };
 
@@ -177,11 +176,35 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
     );
   };
 
+  // ЯСКРАВІ ЗОНИ з більшою насиченістю
   const renderZones = () => (
     <>
-      <ReferenceArea y1={0} y2={6} fill="#ff4444" fillOpacity={0.4} stroke="none" />
-      <ReferenceArea y1={6} y2={18} fill="#ffcc00" fillOpacity={0.4} stroke="none" />
-      <ReferenceArea y1={18} y2={yMax} fill="#44ff44" fillOpacity={0.4} stroke="none" />
+      {/* Червона зона: 0-6 - яскраво червона */}
+      <ReferenceArea 
+        y1={0} 
+        y2={6} 
+        fill="#ff4444" 
+        fillOpacity={0.4} 
+        stroke="none"
+      />
+      {/* Жовта зона: 6-18 - яскраво жовта */}
+      <ReferenceArea 
+        y1={6} 
+        y2={18} 
+        fill="#ffcc00" 
+        fillOpacity={0.4} 
+        stroke="none"
+      />
+      {/* Зелена зона: 18+ - яскраво зелена */}
+      <ReferenceArea 
+        y1={18} 
+        y2={yMax} 
+        fill="#44ff44" 
+        fillOpacity={0.4} 
+        stroke="none"
+      />
+      
+      {/* Додаємо межі зон для кращої видимості */}
       <ReferenceLine y={6} stroke="#ff4444" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
       <ReferenceLine y={18} stroke="#44ff44" strokeWidth={2} strokeDasharray="5 5" opacity={0.7} />
     </>
@@ -204,32 +227,39 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
 
   return (
     <div className="user-mode">
-      <button className="hamburger-toggle" onClick={() => setFiltersOpen(prev => !prev)}>
-        <span className="hamburger-line"></span>
-        <span className="hamburger-line"></span>
-        <span className="hamburger-line"></span>
-      </button>
+      <div className="controls-panel">
+        <div className="controls-group">
+          <label>Період часу:</label>
+          <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
+            <option value="1h">Остання година</option>
+            <option value="6h">6 годин</option>
+            <option value="24h">24 години</option>
+            <option value="7d">7 днів</option>
+            <option value="all">Весь час</option>
+          </select>
+        </div>
 
-      <div className="sensor-controls-panel">
-        <h3>🖲️ Відображення сенсорів</h3>
-        <div className="sensors-toggle">
-          {sensors.map(sensor => (
-            <label key={sensor.column} className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={visibleSensors[sensor.column] !== false}
-                onChange={(e) => setVisibleSensors(prev => ({
-                  ...prev,
-                  [sensor.column]: e.target.checked
-                }))}
-              />
-              <span 
-                className="sensor-color" 
-                style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-              ></span>
-              <span className="sensor-name">{sensor.name}</span>
-            </label>
-          ))}
+        <div className="controls-group">
+          <label>Відображення сенсорів:</label>
+          <div className="sensors-toggle">
+            {sensors.map(sensor => (
+              <label key={sensor.column} className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={visibleSensors[sensor.column] !== false}
+                  onChange={(e) => setVisibleSensors(prev => ({
+                    ...prev,
+                    [sensor.column]: e.target.checked
+                  }))}
+                />
+                <span 
+                  className="sensor-color" 
+                  style={{ backgroundColor: sensor.color || '#1e3a8a' }}
+                ></span>
+                <span className="sensor-name">{sensor.name}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -241,8 +271,18 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-              <XAxis dataKey="timestamp" tickFormatter={formatDateForDisplay} stroke="#000000" fontSize={12} />
-              <YAxis stroke="#000000" width={30} domain={[yMin, yMax]} fontSize={12} />
+              <XAxis 
+                dataKey="timestamp" 
+                tickFormatter={formatDateForDisplay} 
+                stroke="#000000" 
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="#000000" 
+                width={30} 
+                domain={[yMin, yMax]} 
+                fontSize={12}
+              />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               {renderZones()}
@@ -262,7 +302,52 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>      
+      </div>
+
+      <div className="statistics-panel">
+        <h3>📈 Статистика даних</h3>
+        <div className="stats-grid">
+          {activeSensors.map(sensor => {
+            const sensorData = chartData
+              .map(point => point[sensor.column])
+              .filter(val => val !== null);
+            
+            if (sensorData.length === 0) return null;
+
+            const current = sensorData[sensorData.length - 1];
+            const min = Math.min(...sensorData);
+            const max = Math.max(...sensorData);
+            const avg = sensorData.reduce((a, b) => a + b, 0) / sensorData.length;
+
+            return (
+              <div key={sensor.column} className="stat-card" style={{ borderLeftColor: sensor.color || '#1e3a8a' }}>
+                <div className="stat-header">
+                  <h4>{sensor.name}</h4>
+                  <div className="data-points">{sensorData.length} точок</div>
+                </div>
+                <div className="stat-values">
+                  <div className="stat-item">
+                    <span className="stat-label">Поточне:</span>
+                    <span className="stat-value current">{current.toFixed(2)}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Мінімум:</span>
+                    <span className="stat-value min">{min.toFixed(2)}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Максимум:</span>
+                    <span className="stat-value max">{max.toFixed(2)}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Середнє:</span>
+                    <span className="stat-value avg">{avg.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="actions-panel">
         <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
