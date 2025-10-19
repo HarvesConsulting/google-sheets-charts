@@ -114,7 +114,7 @@ function App() {
 
   return (
     <div className="App">
-      {/* Синій верхній бар з сендвіч-кнопкою */}
+      {/* Синій верхній бар ТІЛЬКИ з сендвіч-кнопкою */}
       <header className="top-header">
         <div className="header-content">
           <button 
@@ -126,10 +126,7 @@ function App() {
             <span></span>
             <span></span>
           </button>
-          <div className="header-title">
-            <h1>РОЗУМНИЙ ПОЛИВ</h1>
-            <p>від HarvestConsulting</p>
-          </div>
+          {/* Заголовок прибраний - залишаємо тільки кнопку */}
         </div>
       </header>
 
@@ -149,25 +146,7 @@ function App() {
           </div>
           
           <div className="sidebar-menu">
-            <div className="menu-section">
-              <h3>Про програму</h3>
-              <p className="app-description">
-                Інноваційна система моніторингу та аналізу даних для розумного поливу. 
-                Дозволяє візуалізувати та аналізувати дані з ваших датчиків у реальному часі.
-              </p>
-            </div>
-            
-            <div className="menu-section">
-              <h3>Контакти</h3>
-              <button 
-                className="instagram-btn"
-                onClick={handleInstagramClick}
-              >
-                <span className="instagram-icon">📷</span>
-                <span>Instagram: harvest.consulting</span>
-              </button>
-            </div>
-
+            {/* Секція Режими - ТЕПЕР ЗВЕРХУ */}
             <div className="menu-section">
               <h3>Режими</h3>
               <div className="mode-buttons">
@@ -199,6 +178,27 @@ function App() {
                   Графіки
                 </button>
               </div>
+            </div>
+
+            {/* Секція Про програму - ТЕПЕР ПОСЕРЕДИНІ */}
+            <div className="menu-section">
+              <h3>Про програму</h3>
+              <p className="app-description">
+                Інноваційна система моніторингу та аналізу даних для розумного поливу. 
+                Дозволяє візуалізувати та аналізувати дані з ваших датчиків у реальному часі.
+              </p>
+            </div>
+            
+            {/* Секція Контакти - ТЕПЕР ВНИЗУ */}
+            <div className="menu-section">
+              <h3>Контакти</h3>
+              <button 
+                className="instagram-btn"
+                onClick={handleInstagramClick}
+              >
+                <span className="instagram-icon">📷</span>
+                <span>Instagram: harvest.consulting</span>
+              </button>
             </div>
           </div>
         </div>

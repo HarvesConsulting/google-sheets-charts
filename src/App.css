@@ -13,15 +13,15 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* === Top Header === */
+/* === Top Header - ТЕПЕР ТІЛЬКИ КНОПКА === */
 .top-header {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark-blue) 100%);
-  color: var(--white);
-  padding: 12px 0;
+  padding: 8px 0;
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
   z-index: 1000;
+  height: 48px;
 }
 
 .header-content {
@@ -30,7 +30,6 @@
   padding: 0 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
 }
 
 /* Hamburger Button */
@@ -69,24 +68,6 @@
 
 .hamburger-btn:hover span:nth-child(3) {
   transform: translateY(1px);
-}
-
-.header-title {
-  flex: 1;
-}
-
-.header-title h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.header-title p {
-  margin: 0;
-  font-size: 0.85rem;
-  opacity: 0.9;
-  font-weight: 400;
 }
 
 /* === Sidebar === */
@@ -227,7 +208,7 @@
   font-size: 1.1rem;
 }
 
-/* Mode Buttons */
+/* Mode Buttons - ТЕПЕР ЗВЕРХУ */
 .mode-buttons {
   display: flex;
   flex-direction: column;
@@ -257,20 +238,13 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  margin-top: 0;
 }
 
 /* === Responsive Design === */
 @media (max-width: 768px) {
   .header-content {
     padding: 0 16px;
-  }
-  
-  .header-title h1 {
-    font-size: 1.3rem;
-  }
-  
-  .header-title p {
-    font-size: 0.8rem;
   }
   
   .sidebar {
@@ -288,10 +262,6 @@
 }
 
 @media (max-width: 480px) {
-  .header-title h1 {
-    font-size: 1.1rem;
-  }
-  
   .sidebar {
     width: 100%;
     left: -100%;
