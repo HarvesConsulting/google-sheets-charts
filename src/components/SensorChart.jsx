@@ -119,10 +119,10 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   return (
     <ResponsiveContainer width="100%" height={500}>
-      <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+      <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-        <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={12} />
-        <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={12} />
+        <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#000" fontSize={10} />
+        <YAxis stroke="#000" domain={[yMin, yMax]} fontSize={10} />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
         <defs>
