@@ -262,9 +262,7 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
-
-      
+      </div>      
 
       <div className="actions-panel">
         <button onClick={onBackToStart} className="btn btn-secondary">🏠 На головну</button>
