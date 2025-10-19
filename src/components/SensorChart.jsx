@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
-  const [tooltipActive, setTooltipActive] = useState(false);
+  const [isTouching, setIsTouching] = useState(false);
 
   const parseDate = (dateString) => {
     try {
@@ -91,7 +91,10 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
   const { yMin, yMax } = getYAxisRange();
 
   const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload?.length || !tooltipActive) return null;
+    // Показуємо тултіп тільки якщо активний І ми торкаємось
+    const shouldShow = active && isTouching;
+    
+    if (!shouldShow || !payload?.length) return null;
     
     return (
       <div style={{
@@ -120,29 +123,26 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
     );
   };
 
-  const handleTouchEnd = () => {
-    // Затримка для того, щоб дати час тултіпу відобразитись перед приховуванням
-    setTimeout(() => {
-      setTooltipActive(false);
-    }, 100);
+  const handleTouchStart = () => {
+    setIsTouching(true);
   };
 
-  const handleTouchStart = () => {
-    setTooltipActive(true);
+  const handleTouchEnd = () => {
+    setIsTouching(false);
   };
 
   return (
     <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onMouseLeave={() => setTooltipActive(false)}
+      onTouchCancel={handleTouchEnd} // Додаємо обробник скасування тачу
     >
       <ResponsiveContainer width="100%" height={500}>
         <AreaChart
           data={chartData}
           margin={{ top: 10, right: 10, bottom: 10, left: 5 }}
-          onMouseEnter={() => setTooltipActive(true)}
-          onMouseLeave={() => setTooltipActive(false)}
+          onMouseEnter={() => setIsTouching(true)}
+          onMouseLeave={() => setIsTouching(false)}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
           <XAxis
