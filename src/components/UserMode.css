@@ -1,4 +1,4 @@
-/* === UserMode.css: Оптимізована версія === */
+/* === UserMode.css: Оптимізована версія з єдиним меню === */
 
 :root {
   --primary-color: #3b82f6;
@@ -85,16 +85,15 @@ html, body {
   box-shadow: var(--shadow-md);
   z-index: 1000;
   padding: 12px;
-  min-width: 320px;
+  min-width: 120px;
   max-width: 90vw;
   backdrop-filter: blur(10px);
 }
 
 .hamburger-buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 15px;
 }
 
 .hamburger-item {
@@ -115,8 +114,8 @@ html, body {
   gap: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   justify-content: center;
   align-items: center;
 }
@@ -124,6 +123,7 @@ html, body {
 .hamburger-toggle:hover {
   background: var(--border-hover);
   border-color: var(--text-muted);
+  transform: scale(1.05);
 }
 
 .hamburger-line {
@@ -177,8 +177,91 @@ html, body {
 }
 
 .period-panel.open,
-.sensors-panel.open {
+.sensors-panel.open,
+.main-menu-panel.open {
   display: flex;
+}
+
+/* === Main Menu Styles === */
+.main-menu-panel {
+  min-width: 220px;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.menu-btn:hover {
+  background: var(--surface);
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+}
+
+.menu-icon {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.menu-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* === Panel Headers === */
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  flex: 1;
+}
+
+.back-button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.back-button:hover {
+  background: var(--border-hover);
+  color: var(--text-primary);
 }
 
 .controls-group {
@@ -201,7 +284,7 @@ html, body {
 }
 
 .time-btn {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--background);
@@ -230,7 +313,7 @@ html, body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding: 2px;
 }
 
@@ -239,14 +322,16 @@ html, body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   user-select: none;
+  border: 1px solid transparent;
 }
 
 .checkbox-label:hover {
   background: var(--surface);
+  border-color: var(--border);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -268,30 +353,7 @@ html, body {
   font-weight: 500;
   color: var(--text-primary);
   font-size: 0.9rem;
-}
-
-/* Navigation Buttons */
-.nav-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.nav-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.nav-btn:hover {
-  background: var(--border-hover);
-  border-color: var(--text-muted);
+  flex: 1;
 }
 
 /* === No Data State === */
@@ -321,6 +383,33 @@ html, body {
   color: var(--text-muted);
   margin-bottom: 24px;
   font-size: 1rem;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
 }
 
 /* === Tooltip === */
@@ -383,8 +472,44 @@ html, body {
     padding: 10px;
   }
   
-  .hamburger-buttons {
+  .hamburger-toggle {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .controls-panel {
+    width: calc(100vw - 32px);
+    left: 50%;
+    min-width: auto;
+    padding: 14px;
+  }
+  
+  .main-menu-panel {
+    min-width: 200px;
+  }
+  
+  .menu-btn {
+    padding: 10px 14px;
+    font-size: 0.85rem;
     gap: 10px;
+  }
+  
+  .menu-icon {
+    font-size: 1rem;
+  }
+  
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .panel-header h3 {
+    font-size: 1rem;
+  }
+  
+  .back-button {
+    align-self: flex-start;
   }
   
   .time-buttons {
@@ -395,28 +520,16 @@ html, body {
   .time-btn {
     flex: 1;
     min-width: 80px;
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    padding: 10px 12px;
+    font-size: 0.85rem;
   }
   
-  .controls-panel {
-    width: calc(100vw - 32px);
-    left: 50%;
-    min-width: auto;
+  .sensors-list {
+    max-height: 150px;
   }
   
-  .nav-buttons {
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .nav-btn {
-    padding: 6px 10px;
-    font-size: 0.75rem;
-  }
-  
-  .hamburger-label {
-    font-size: 0.7rem;
+  .checkbox-label {
+    padding: 8px 10px;
   }
 }
 
@@ -438,8 +551,20 @@ html, body {
     padding: 12px;
   }
   
-  .sensors-list {
-    max-height: 150px;
+  .menu-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .time-btn {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+  
+  .btn {
+    min-width: 160px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
 }
 
@@ -451,7 +576,10 @@ html, body {
     --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.3);
   }
   
-  .hamburger-toggle {
+  .hamburger-toggle,
+  .menu-btn,
+  .time-btn,
+  .checkbox-label {
     border-width: 2px;
   }
 }
@@ -459,10 +587,19 @@ html, body {
 /* === Reduced Motion === */
 @media (prefers-reduced-motion: reduce) {
   .hamburger-toggle,
+  .menu-btn,
   .time-btn,
-  .nav-btn,
-  .checkbox-label {
+  .checkbox-label,
+  .btn {
     transition: none;
+  }
+  
+  .hamburger-toggle:hover {
+    transform: none;
+  }
+  
+  .menu-btn:hover {
+    transform: none;
   }
   
   @keyframes slideDown {
@@ -473,4 +610,20 @@ html, body {
       opacity: 1;
     }
   }
+}
+
+/* === Focus States for Accessibility === */
+.hamburger-toggle:focus-visible,
+.menu-btn:focus-visible,
+.time-btn:focus-visible,
+.back-button:focus-visible,
+.checkbox-label:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.checkbox-label:focus-within {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
