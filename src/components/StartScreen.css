@@ -28,14 +28,6 @@
 .mode-buttons {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  align-items: center;
-  margin-bottom: 60px;
-}
-
-.mode-buttons {
-  display: flex;
-  flex-direction: column;
   gap: 30px;
   align-items: center;
   margin-bottom: 60px;
@@ -76,6 +68,20 @@
   left: 100%;
 }
 
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.btn.loading {
+  cursor: wait;
+  transform: none !important;
+}
+
+.btn.loading::before {
+  display: none;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
@@ -83,21 +89,71 @@
   border: 2px solid #60a5fa;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   transform: translateY(-5px) scale(1.02);
   box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Зелений градієнт */
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
   border: 2px solid #34d399;
+  position: relative;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   transform: translateY(-5px) scale(1.02);
   box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+}
+
+.btn-secondary.loading {
+  background: linear-gradient(135deg, #0d9668 0%, #047852 100%);
+  box-shadow: 0 8px 25px rgba(13, 150, 104, 0.4);
+}
+
+/* Спинер завантаження */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Пульсуюча анімація */
+.btn-secondary.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 16px;
+  animation: pulse 2s infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
 }
 
 .footer {
@@ -124,9 +180,10 @@
   }
   
   .btn {
-    width: 140px;
-    height: 140px;
-    font-size: 1.3rem;
+    min-width: 240px;
+    min-height: 70px;
+    font-size: 1.2rem;
+    padding: 20px 30px;
   }
 }
 
@@ -141,8 +198,14 @@
   }
   
   .btn {
-    width: 130px;
-    height: 130px;
-    font-size: 1.2rem;
+    min-width: 220px;
+    min-height: 65px;
+    font-size: 1.1rem;
+    padding: 18px 25px;
+  }
+  
+  .spinner {
+    width: 16px;
+    height: 16px;
   }
 }
