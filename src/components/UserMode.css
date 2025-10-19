@@ -562,7 +562,7 @@ html, body {
     right: 16px;
   }
 }
-/* Закріплена нижня панель */
+/* Закріплена нижня панель з двома сендвіч-кнопками */
 .bottom-panel {
   position: fixed;
   bottom: 20px;
@@ -573,23 +573,34 @@ html, body {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  min-width: 280px;
+  padding: 12px;
+  min-width: 320px;
   max-width: 90vw;
 }
 
-.bottom-hamburger {
+.hamburger-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.hamburger-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+
+.hamburger-toggle {
   background: #f3f4f6;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
   transition: background 0.3s;
   width: 40px;
@@ -598,38 +609,57 @@ html, body {
   align-items: center;
 }
 
-.bottom-hamburger:hover {
+.hamburger-toggle:hover {
   background: #e5e7eb;
 }
 
-.bottom-controls {
-  display: none;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
+.hamburger-label {
+  font-size: 0.75rem;
+  color: #374151;
+  font-weight: 500;
 }
 
-.bottom-controls.open {
+/* Панелі керування */
+.controls-panel {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 200px;
+  margin-bottom: 10px;
+  z-index: 1001;
+}
+
+.period-panel.open,
+.sensors-panel.open {
   display: flex;
 }
 
 /* Навігаційні кнопки */
 .nav-buttons {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 8px;
 }
 
 .nav-btn {
   background: none;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  padding: 8px 16px;
+  padding: 8px 12px;
   color: #374151;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .nav-btn:hover {
@@ -648,34 +678,43 @@ html, body {
     max-width: none;
   }
   
+  .hamburger-buttons {
+    gap: 10px;
+  }
+  
   .nav-buttons {
     flex-direction: column;
+    gap: 5px;
   }
   
-  .time-buttons {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .nav-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
   }
   
-  .time-btn {
-    flex: 1;
-    min-width: 80px;
-    padding: 8px 12px;
-    font-size: 0.8rem;
+  .hamburger-label {
+    font-size: 0.7rem;
+  }
+  
+  .controls-panel {
+    min-width: 180px;
   }
 }
 
-/* Стилі для елементів керування в нижній панелі */
-.bottom-controls .controls-group {
-  margin: 0;
-}
-
-.bottom-controls .controls-group label {
-  font-size: 0.85rem;
-  margin-bottom: 5px;
-}
-
-.bottom-controls .sensors-toggle {
-  max-height: 150px;
+/* Стилі для списку датчиків */
+.sensors-list {
+  max-height: 200px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sensors-list .checkbox-label {
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.sensors-list .checkbox-label:hover {
+  background: #f3f4f6;
 }

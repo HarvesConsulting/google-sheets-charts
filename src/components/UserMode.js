@@ -8,7 +8,8 @@ import './UserMode.css';
 const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) => {
   const [visibleSensors, setVisibleSensors] = useState({});
   const [timeRange, setTimeRange] = useState('7d');
-  const [showBottomPanel, setShowBottomPanel] = useState(false);
+  const [showPeriodPanel, setShowPeriodPanel] = useState(false);
+  const [showSensorsPanel, setShowSensorsPanel] = useState(false);
 
   useEffect(() => {
     const initialVisibility = {};
@@ -262,68 +263,90 @@ const UserMode = ({ data, config, sensors, onBackToStart, onBackToDeveloper }) =
         </div>
       </div>
 
-      {/* Закріплена нижня панель */}
+      {/* Закріплена нижня панель з двома сендвіч-кнопками */}
       <div className="bottom-panel">
-        <div className="bottom-hamburger" onClick={() => setShowBottomPanel(!showBottomPanel)}>
-          <div className="hamburger-line"></div>
-          <div className="hamburger-line"></div>
-          <div className="hamburger-line"></div>
-        </div>
-        
-        <div className={`bottom-controls ${showBottomPanel ? 'open' : ''}`}>
+        <div className="hamburger-buttons">
+          {/* Кнопка періоду */}
+          <div className="hamburger-item">
+            <div 
+              className="hamburger-toggle period-toggle" 
+              onClick={() => setShowPeriodPanel(!showPeriodPanel)}
+            >
+              <div className="hamburger-line"></div>
+              <div className="hamburger-line"></div>
+              <div className="hamburger-line"></div>
+            </div>
+            <span className="hamburger-label">Період</span>
+            
+            <div className={`controls-panel period-panel ${showPeriodPanel ? 'open' : ''}`}>
+              <div className="controls-group">
+                <label>Період даних:</label>
+                <div className="time-buttons">
+                  <button 
+                    className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
+                    onClick={() => setTimeRange('all')}
+                  >
+                    Весь період
+                  </button>
+                  <button 
+                    className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
+                    onClick={() => setTimeRange('7d')}
+                  >
+                    7 днів
+                  </button>
+                  <button 
+                    className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
+                    onClick={() => setTimeRange('1d')}
+                  >
+                    Добу
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Кнопка датчиків */}
+          <div className="hamburger-item">
+            <div 
+              className="hamburger-toggle sensors-toggle-btn" 
+              onClick={() => setShowSensorsPanel(!showSensorsPanel)}
+            >
+              <div className="hamburger-line"></div>
+              <div className="hamburger-line"></div>
+              <div className="hamburger-line"></div>
+            </div>
+            <span className="hamburger-label">Датчики</span>
+            
+            <div className={`controls-panel sensors-panel ${showSensorsPanel ? 'open' : ''}`}>
+              <div className="controls-group">
+                <label>Вибір датчиків:</label>
+                <div className="sensors-list">
+                  {sensors.map(sensor => (
+                    <label key={sensor.column} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={visibleSensors[sensor.column] !== false}
+                        onChange={(e) => setVisibleSensors(prev => ({
+                          ...prev,
+                          [sensor.column]: e.target.checked
+                        }))}
+                      />
+                      <span 
+                        className="sensor-color" 
+                        style={{ backgroundColor: sensor.color || '#1e3a8a' }}
+                      ></span>
+                      <span className="sensor-name">{sensor.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Кнопки навігації */}
           <div className="nav-buttons">
             <button onClick={onBackToStart} className="nav-btn">На головну</button>
             <button onClick={onBackToDeveloper} className="nav-btn">Налаштування</button>
-          </div>
-
-          {/* Вибір періоду */}
-          <div className="controls-group">
-            <label>Період даних:</label>
-            <div className="time-buttons">
-              <button 
-                className={`time-btn ${timeRange === 'all' ? 'active' : ''}`}
-                onClick={() => setTimeRange('all')}
-              >
-                Весь період
-              </button>
-              <button 
-                className={`time-btn ${timeRange === '7d' ? 'active' : ''}`}
-                onClick={() => setTimeRange('7d')}
-              >
-                7 днів
-              </button>
-              <button 
-                className={`time-btn ${timeRange === '1d' ? 'active' : ''}`}
-                onClick={() => setTimeRange('1d')}
-              >
-                Добу
-              </button>
-            </div>
-          </div>
-
-          {/* Вибір датчиків */}
-          <div className="controls-group">
-            <label>Вибір датчиків:</label>
-            <div className="sensors-toggle">
-              {sensors.map(sensor => (
-                <label key={sensor.column} className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={visibleSensors[sensor.column] !== false}
-                    onChange={(e) => setVisibleSensors(prev => ({
-                      ...prev,
-                      [sensor.column]: e.target.checked
-                    }))}
-                  />
-                  <span 
-                    className="sensor-color" 
-                    style={{ backgroundColor: sensor.color || '#1e3a8a' }}
-                  ></span>
-                  <span className="sensor-name">{sensor.name}</span>
-                </label>
-              ))}
-            </div>
           </div>
         </div>
       </div>
