@@ -1,5 +1,5 @@
 // SensorChart.jsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
   ReferenceLine, ReferenceArea
@@ -7,6 +7,7 @@ import {
 
 const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
   const [activeTooltip, setActiveTooltip] = useState(false);
+  const touchTimerRef = useRef(null);
 
   const parseDate = (dateString) => {
     try {
@@ -96,14 +97,36 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   const { yMin, yMax } = getYAxisRange();
 
-  const CustomTooltip = ({ active, payload, label, coordinate }) => {
-    if (!active || !payload?.length) return null;
+  const handleTouchStart = () => {
+    // Очищаємо таймер при новому дотику
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+    setActiveTooltip(true);
+  };
 
-    // Визначаємо позицію тултіпа - завжди зверху від курсора/пальця
+  const handleTouchEnd = () => {
+    // Встановлюємо невелику затримку для плавного сховання
+    touchTimerRef.current = setTimeout(() => {
+      setActiveTooltip(false);
+    }, 150); // Зменшена затримка для швидшого сховання
+  };
+
+  const handleTouchCancel = () => {
+    // Негайне сховання при скасуванні дотику
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+    setActiveTooltip(false);
+  };
+
+  const CustomTooltip = ({ active, payload, label, coordinate }) => {
+    if (!active || !payload?.length || !activeTooltip) return null;
+
     const tooltipStyle = {
       position: 'absolute',
       left: coordinate?.x || 0,
-      top: (coordinate?.y || 0) - 70, // Зміщуємо вище від точки
+      top: (coordinate?.y || 0) - 70,
       transform: 'translateX(-50%)',
       background: '#fff',
       border: '1px solid #e5e7eb',
@@ -117,7 +140,6 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
       color: '#000'
     };
 
-    // Якщо тултіп виходить за верхній край, показуємо його знизу
     if (coordinate?.y < 100) {
       tooltipStyle.top = (coordinate?.y || 0) + 20;
     }
@@ -136,19 +158,20 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
 
   return (
     <div 
-      onTouchStart={() => setActiveTooltip(true)}
-      onTouchEnd={() => setTimeout(() => setActiveTooltip(false), 100)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
       style={{ 
         touchAction: 'pan-y pinch-zoom',
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        position: 'relative' // Для коректного позиціонування тултіпа
+        position: 'relative'
       }}
     >
       <ResponsiveContainer width="100%" height={500}>
         <LineChart 
           data={chartData} 
-          margin={{ top: 20, right: 20, bottom: 10, left: 0 }} // Збільшив top margin для тултіпа
+          margin={{ top: 20, right: 20, bottom: 10, left: 0 }}
           onMouseEnter={() => setActiveTooltip(true)}
           onMouseLeave={() => setActiveTooltip(false)}
         >
@@ -168,9 +191,8 @@ const SensorChart = ({ data, config, sensors, visibleSensors, timeRange }) => {
           />
           <Tooltip 
             content={<CustomTooltip />}
-            trigger={activeTooltip ? "hover" : "none"}
+            trigger="hover"
             animationDuration={200}
-            position={{ y: -70 }} // Додатково зміщуємо тултіп вгору
           />
           <Legend />
           <defs>
